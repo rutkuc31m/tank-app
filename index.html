@@ -31,6 +31,15 @@
     .icon-btn.spinning { animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Pull-to-refresh bar */
+    #ptr {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; justify-content: center; align-items: center;
+      height: 0; overflow: hidden; transition: height .15s;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      font-size: .85rem; color: var(--text2);
+    }
+
     /* Controls */
     .controls { max-width: 500px; margin: 14px auto 0; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
     .tabs { display: flex; gap: 6px; }
@@ -43,9 +52,11 @@
     .opt-btn.active { background: var(--card2); color: var(--text); border-color: var(--text3); }
 
     /* Status bar */
-    .statusbar { max-width: 500px; margin: 8px auto 0; padding: 0 16px; }
+    .statusbar { max-width: 500px; margin: 8px auto 0; padding: 0 16px; display: flex; align-items: center; gap: 8px; }
     .status-text { font-size: 12px; color: var(--text3); }
     .status-err { font-size: 12px; color: #f87171; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
+    @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
 
     /* Station list */
     .list { max-width: 500px; margin: 10px auto 80px; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
@@ -85,7 +96,7 @@
     .key-btn { margin-top: 10px; width: 100%; padding: 12px; background: var(--accent-subtle); border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
     .key-btn:hover { opacity: 0.85; }
 
-    /* Loading */
+    /* Loading skeletons (only on first load, no cache) */
     .skel { background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius); height: 120px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
@@ -95,27 +106,36 @@
   </style>
 </head>
 <body>
+<div id="ptr"><span id="ptr-icon">↓ Ziehen</span></div>
 <div id="app"></div>
 <script>
 const LS_KEY    = 't_key';
 const LS_FUEL   = 't_fuel';
 const LS_SORT   = 't_sort';
 const LS_RADIUS = 't_radius';
+const LS_CACHE  = 't_cache';
 
-const HANNOVER = { lat: 52.3759, lng: 9.7320 };
+const HANNOVER    = { lat: 52.3759, lng: 9.7320 };
 const FUELS       = ['alle','e5','e10','diesel'];
 const FUEL_LABEL  = { alle:'Alle', e5:'E5', e10:'E10', diesel:'Diesel' };
 const RADII       = [3, 5, 10];
+
+// restore cache
+let cachedStations = [], cachedUpdated = null;
+try {
+  const c = JSON.parse(localStorage.getItem(LS_CACHE) || 'null');
+  if (c) { cachedStations = c.stations || []; cachedUpdated = c.ts ? new Date(c.ts) : null; }
+} catch(_) {}
 
 let st = {
   key:      localStorage.getItem(LS_KEY)    || '',
   fuel:     localStorage.getItem(LS_FUEL)   || 'e5',
   sort:     localStorage.getItem(LS_SORT)   || 'preis',
   radius:   parseInt(localStorage.getItem(LS_RADIUS)) || 5,
-  stations: [],
+  stations: cachedStations,
   loading:  false,
   error:    null,
-  updated:  null,
+  updated:  cachedUpdated,
 };
 
 function save(k, v) { localStorage.setItem(k, String(v)); }
@@ -129,7 +149,7 @@ function fmt(p) {
 
 function cheapestOf(list, fuel) {
   if (fuel === 'alle') return null;
-  const open = list.filter(s => s.isOpen);
+  const open   = list.filter(s => s.isOpen);
   const prices = open.map(s => num(s[fuel])).filter(Boolean);
   return prices.length ? Math.min(...prices) : null;
 }
@@ -137,11 +157,7 @@ function cheapestOf(list, fuel) {
 function sorted() {
   let list = [...st.stations];
   if (st.sort === 'preis' && st.fuel !== 'alle') {
-    list.sort((a, b) => {
-      const pa = num(a[st.fuel]) || 9999;
-      const pb = num(b[st.fuel]) || 9999;
-      return pa - pb;
-    });
+    list.sort((a, b) => (num(a[st.fuel]) || 9999) - (num(b[st.fuel]) || 9999));
   }
   return list;
 }
@@ -149,7 +165,8 @@ function sorted() {
 async function load() {
   if (!st.key) return;
   st.loading = true; st.error = null;
-  render();
+  render();  // show cached data + loading dot immediately
+
   const fp  = st.fuel === 'alle' ? 'all' : st.fuel;
   const url = `https://creativecommons.tankerkoenig.de/json/list.php?lat=${HANNOVER.lat}&lng=${HANNOVER.lng}&rad=${st.radius}&sort=dist&type=${fp}&apikey=${st.key}`;
   try {
@@ -158,9 +175,11 @@ async function load() {
     if (!data.ok) throw new Error(data.message || 'API-Fehler');
     st.stations = data.stations || [];
     st.updated  = new Date();
+    // persist cache
+    localStorage.setItem(LS_CACHE, JSON.stringify({ stations: st.stations, ts: st.updated.toISOString() }));
   } catch(e) {
-    st.error    = e.message;
-    st.stations = [];
+    st.error = e.message;
+    // keep cached stations visible on error
   }
   st.loading = false;
   render();
@@ -184,10 +203,12 @@ function renderSetup() {
 }
 
 function renderMain() {
-  const list    = sorted();
+  const list     = sorted();
   const minPrice = cheapestOf(list, st.fuel);
+  const hasCache = st.stations.length > 0;
 
-  const cards = st.loading
+  // show skeletons only on first load (no cache at all)
+  const cards = (st.loading && !hasCache)
     ? Array(5).fill(0).map(() => `<div class="skel"></div>`).join('')
     : list.length
       ? list.map(s => renderCard(s, minPrice)).join('')
@@ -201,7 +222,7 @@ function renderMain() {
     </div>
     <div class="header-actions">
       <button class="icon-btn" id="sbtn" title="API-Key ändern">⚙</button>
-      <button class="icon-btn" id="rbtn" title="Aktualisieren">↻</button>
+      <button class="icon-btn${st.loading ? ' spinning' : ''}" id="rbtn" title="Aktualisieren">↻</button>
     </div>
   </header>
 
@@ -223,11 +244,21 @@ function renderMain() {
   </div>
 
   <div class="statusbar">
-    ${st.updated  ? `<div class="status-text">Stand: ${st.updated.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} · ${list.length} Stationen</div>` : ''}
-    ${st.error    ? `<div class="status-err">Fehler: ${st.error}</div>` : ''}
+    ${st.loading ? '<div class="status-dot"></div>' : ''}
+    <div class="${st.error ? 'status-err' : 'status-text'}">
+      ${st.error
+        ? 'Fehler: ' + st.error + (st.updated ? ' · Stand: ' + fmtTime(st.updated) : '')
+        : st.updated
+          ? (st.loading ? 'Aktualisiere…' : 'Stand: ' + fmtTime(st.updated)) + ' · ' + list.length + ' Stationen'
+          : st.loading ? 'Lade…' : ''}
+    </div>
   </div>
 
   <div class="list">${cards}</div>`;
+}
+
+function fmtTime(d) {
+  return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 }
 
 function renderCard(s, minPrice) {
@@ -235,9 +266,9 @@ function renderCard(s, minPrice) {
   const fuels = ['e5','e10','diesel'];
 
   const priceBlocks = fuels.map(f => {
-    const isSel     = st.fuel === f;
-    const p         = num(s[f]);
-    const isAccent  = isSel && isMin && p;
+    const isSel    = st.fuel === f;
+    const p        = num(s[f]);
+    const isAccent = isSel && isMin && p;
     return `
     <div class="p-item${isSel ? ' sel' : ''}">
       <div class="p-type">${FUEL_LABEL[f]}</div>
@@ -265,7 +296,6 @@ function renderCard(s, minPrice) {
 
 /* ── event wiring ─────────────────────────────── */
 function attach() {
-  // setup screen
   const ksave = document.getElementById('ksave');
   const kinp  = document.getElementById('kinp');
   if (ksave) {
@@ -277,15 +307,9 @@ function attach() {
     kinp.onkeydown = e => { if (e.key === 'Enter') ksave.click(); };
   }
 
-  // main screen
   const rbtn = document.getElementById('rbtn');
   const sbtn = document.getElementById('sbtn');
-  if (rbtn) {
-    rbtn.onclick = () => {
-      rbtn.classList.add('spinning');
-      load().then(() => rbtn.classList.remove('spinning'));
-    };
-  }
+  if (rbtn) rbtn.onclick = () => { if (!st.loading) load(); };
   if (sbtn) {
     sbtn.onclick = () => {
       const v = prompt('Tankerkönig API-Key:', st.key);
@@ -304,10 +328,41 @@ function attach() {
   });
 }
 
-// auto-refresh every 5 min
-setInterval(() => { if (st.key) load(); }, 5 * 60 * 1000);
+/* ── Pull-to-Refresh (geerbt von pollen-app) ─── */
+const ptr_el   = document.getElementById('ptr');
+const ptr_icon = document.getElementById('ptr-icon');
+let ptr_startY = 0, ptr_pulling = false;
 
-// boot
+document.addEventListener('touchstart', e => {
+  ptr_startY = window.scrollY < 5 ? e.touches[0].clientY : 0;
+}, { passive: true });
+
+document.addEventListener('touchmove', e => {
+  if (!ptr_startY || st.loading) return;
+  const dy = e.touches[0].clientY - ptr_startY;
+  if (dy > 4) {
+    ptr_pulling = true;
+    const h = Math.min(dy * 0.75, 52);
+    ptr_el.style.height = h + 'px';
+    ptr_icon.textContent = h >= 28 ? '↺ Loslassen' : '↓ Ziehen';
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+  if (ptr_pulling && parseInt(ptr_el.style.height) >= 28) {
+    ptr_el.style.height = '42px';
+    ptr_icon.textContent = '⟳ Aktualisiere…';
+    load().finally(() => { ptr_el.style.height = '0'; });
+  } else {
+    ptr_el.style.height = '0';
+  }
+  ptr_startY = 0; ptr_pulling = false;
+}, { passive: true });
+
+/* ── auto-refresh every 5 min ────────────────── */
+setInterval(() => { if (st.key && !st.loading) load(); }, 5 * 60 * 1000);
+
+/* ── boot ────────────────────────────────────── */
 if (st.key) load(); else render();
 </script>
 </body>
