@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tank App — Hannover</title>
+  <meta name="theme-color" content="#0a0a0b">
+  <style>
+    :root {
+      --bg: #0a0a0b;
+      --card: #18181b;
+      --card2: #27272a;
+      --border: #3f3f46;
+      --text: #fafafa;
+      --text2: #a1a1aa;
+      --text3: #71717a;
+      --accent: #bae6fd;
+      --accent-subtle: #0c2840;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+    /* Header */
+    header { padding: 20px 16px 0; max-width: 500px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .header-left h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-sub { font-size: 13px; color: var(--text3); margin-top: 2px; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .icon-btn { background: var(--card2); border: 1px solid var(--border); color: var(--text2); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: color 0.2s; flex-shrink: 0; }
+    .icon-btn:hover { color: var(--text); }
+    .icon-btn.spinning { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Controls */
+    .controls { max-width: 500px; margin: 14px auto 0; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+    .tabs { display: flex; gap: 6px; }
+    .tab { flex: 1; padding: 8px 4px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-align: center; }
+    .tab.active { background: var(--accent-subtle); border-color: var(--accent); color: var(--accent); }
+    .opts-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+    .opt-group { display: flex; align-items: center; gap: 6px; }
+    .opt-label { font-size: 12px; color: var(--text3); white-space: nowrap; }
+    .opt-btn { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+    .opt-btn.active { background: var(--card2); color: var(--text); border-color: var(--text3); }
+
+    /* Status bar */
+    .statusbar { max-width: 500px; margin: 8px auto 0; padding: 0 16px; }
+    .status-text { font-size: 12px; color: var(--text3); }
+    .status-err { font-size: 12px; color: #f87171; }
+
+    /* Station list */
+    .list { max-width: 500px; margin: 10px auto 80px; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* Card */
+    .s-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.2s; }
+    .s-card.cheapest { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+
+    .s-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .s-info { flex: 1; min-width: 0; }
+    .s-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .s-brand { font-size: 12px; color: var(--text3); margin-top: 1px; }
+    .s-addr { font-size: 12px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .s-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+    .dist-badge { font-size: 12px; color: var(--text3); }
+    .open-pill { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+    .open-pill.open { background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--accent); }
+    .open-pill.closed { background: color-mix(in srgb, var(--border) 40%, var(--card)); color: var(--text3); }
+
+    .cheapest-tag { font-size: 11px; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 3px; }
+
+    .prices { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+    .p-item { background: var(--card2); border-radius: 8px; padding: 9px 8px; text-align: center; }
+    .p-item.sel { background: color-mix(in srgb, var(--accent) 11%, var(--card)); }
+    .p-type { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+    .p-val { font-size: 17px; font-weight: 700; color: var(--text2); line-height: 1; }
+    .p-val.accent { color: var(--accent); }
+    .p-val.na { color: var(--text3); font-size: 14px; font-weight: 400; }
+
+    /* Setup screen */
+    .setup { max-width: 400px; margin: 80px auto; padding: 0 24px; text-align: center; }
+    .setup-icon { font-size: 44px; margin-bottom: 16px; }
+    .setup h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .setup p { color: var(--text2); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+    .key-inp { width: 100%; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 13px; font-family: monospace; outline: none; transition: border-color 0.2s; }
+    .key-inp:focus { border-color: var(--accent); }
+    .key-btn { margin-top: 10px; width: 100%; padding: 12px; background: var(--accent-subtle); border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .key-btn:hover { opacity: 0.85; }
+
+    /* Loading */
+    .skel { background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius); height: 120px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Empty */
+    .empty { text-align: center; padding: 50px 20px; color: var(--text2); font-size: 14px; }
+    .empty-icon { font-size: 32px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const LS_KEY    = 't_key';
+const LS_FUEL   = 't_fuel';
+const LS_SORT   = 't_sort';
+const LS_RADIUS = 't_radius';
+
+const HANNOVER = { lat: 52.3759, lng: 9.7320 };
+const FUELS       = ['alle','e5','e10','diesel'];
+const FUEL_LABEL  = { alle:'Alle', e5:'E5', e10:'E10', diesel:'Diesel' };
+const RADII       = [3, 5, 10];
+
+let st = {
+  key:      localStorage.getItem(LS_KEY)    || '',
+  fuel:     localStorage.getItem(LS_FUEL)   || 'e5',
+  sort:     localStorage.getItem(LS_SORT)   || 'preis',
+  radius:   parseInt(localStorage.getItem(LS_RADIUS)) || 5,
+  stations: [],
+  loading:  false,
+  error:    null,
+  updated:  null,
+};
+
+function save(k, v) { localStorage.setItem(k, String(v)); }
+
+function num(p) { return p && p > 0 ? p : null; }
+
+function fmt(p) {
+  if (!num(p)) return '–';
+  return p.toFixed(3).replace('.', ',') + '\u202f€';
+}
+
+function cheapestOf(list, fuel) {
+  if (fuel === 'alle') return null;
+  const open = list.filter(s => s.isOpen);
+  const prices = open.map(s => num(s[fuel])).filter(Boolean);
+  return prices.length ? Math.min(...prices) : null;
+}
+
+function sorted() {
+  let list = [...st.stations];
+  if (st.sort === 'preis' && st.fuel !== 'alle') {
+    list.sort((a, b) => {
+      const pa = num(a[st.fuel]) || 9999;
+      const pb = num(b[st.fuel]) || 9999;
+      return pa - pb;
+    });
+  }
+  return list;
+}
+
+async function load() {
+  if (!st.key) return;
+  st.loading = true; st.error = null;
+  render();
+  const fp  = st.fuel === 'alle' ? 'all' : st.fuel;
+  const url = `https://creativecommons.tankerkoenig.de/json/list.php?lat=${HANNOVER.lat}&lng=${HANNOVER.lng}&rad=${st.radius}&sort=dist&type=${fp}&apikey=${st.key}`;
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.message || 'API-Fehler');
+    st.stations = data.stations || [];
+    st.updated  = new Date();
+  } catch(e) {
+    st.error    = e.message;
+    st.stations = [];
+  }
+  st.loading = false;
+  render();
+}
+
+/* ── render ───────────────────────────────────── */
+function render() {
+  document.getElementById('app').innerHTML = st.key ? renderMain() : renderSetup();
+  attach();
+}
+
+function renderSetup() {
+  return `
+  <div class="setup">
+    <div class="setup-icon">⛽</div>
+    <h2>Tank App</h2>
+    <p>Gib deinen Tankerkönig API-Key ein um Kraftstoffpreise in Hannover zu sehen.</p>
+    <input class="key-inp" id="kinp" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+    <button class="key-btn" id="ksave">Speichern &amp; starten</button>
+  </div>`;
+}
+
+function renderMain() {
+  const list    = sorted();
+  const minPrice = cheapestOf(list, st.fuel);
+
+  const cards = st.loading
+    ? Array(5).fill(0).map(() => `<div class="skel"></div>`).join('')
+    : list.length
+      ? list.map(s => renderCard(s, minPrice)).join('')
+      : `<div class="empty"><div class="empty-icon">🔍</div>Keine Stationen gefunden</div>`;
+
+  return `
+  <header>
+    <div class="header-left">
+      <h1>⛽ Tank App</h1>
+      <div class="header-sub">Hannover · ${st.radius}&thinsp;km Umkreis</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="sbtn" title="API-Key ändern">⚙</button>
+      <button class="icon-btn" id="rbtn" title="Aktualisieren">↻</button>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="tabs">
+      ${FUELS.map(f => `<button class="tab${st.fuel===f?' active':''}" data-fuel="${f}">${FUEL_LABEL[f]}</button>`).join('')}
+    </div>
+    <div class="opts-row">
+      <div class="opt-group">
+        <span class="opt-label">Sortierung:</span>
+        <button class="opt-btn${st.sort==='preis'?' active':''}" data-sort="preis">Preis</button>
+        <button class="opt-btn${st.sort==='distanz'?' active':''}" data-sort="distanz">Entfernung</button>
+      </div>
+      <div class="opt-group">
+        <span class="opt-label">Umkreis:</span>
+        ${RADII.map(r => `<button class="opt-btn${st.radius===r?' active':''}" data-rad="${r}">${r}&thinsp;km</button>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    ${st.updated  ? `<div class="status-text">Stand: ${st.updated.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})} · ${list.length} Stationen</div>` : ''}
+    ${st.error    ? `<div class="status-err">Fehler: ${st.error}</div>` : ''}
+  </div>
+
+  <div class="list">${cards}</div>`;
+}
+
+function renderCard(s, minPrice) {
+  const isMin = minPrice !== null && num(s[st.fuel]) === minPrice;
+  const fuels = ['e5','e10','diesel'];
+
+  const priceBlocks = fuels.map(f => {
+    const isSel     = st.fuel === f;
+    const p         = num(s[f]);
+    const isAccent  = isSel && isMin && p;
+    return `
+    <div class="p-item${isSel ? ' sel' : ''}">
+      <div class="p-type">${FUEL_LABEL[f]}</div>
+      <div class="p-val${isAccent ? ' accent' : p ? '' : ' na'}">${fmt(s[f])}</div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="s-card${isMin ? ' cheapest' : ''}">
+    <div class="s-top">
+      <div class="s-info">
+        <div class="s-name">${s.name || s.brand || 'Tankstelle'}</div>
+        ${s.brand ? `<div class="s-brand">${s.brand}</div>` : ''}
+        <div class="s-addr">${[s.street, s.place].filter(Boolean).join(', ')}</div>
+      </div>
+      <div class="s-right">
+        <span class="dist-badge">${s.dist ? s.dist.toFixed(1)+'\u202fkm' : ''}</span>
+        <span class="open-pill ${s.isOpen ? 'open' : 'closed'}">${s.isOpen ? 'Offen' : 'Zu'}</span>
+      </div>
+    </div>
+    ${isMin ? `<div class="cheapest-tag">★ Günstigste ${FUEL_LABEL[st.fuel]}-Tankstelle</div>` : ''}
+    <div class="prices">${priceBlocks}</div>
+  </div>`;
+}
+
+/* ── event wiring ─────────────────────────────── */
+function attach() {
+  // setup screen
+  const ksave = document.getElementById('ksave');
+  const kinp  = document.getElementById('kinp');
+  if (ksave) {
+    ksave.onclick = () => {
+      const v = kinp.value.trim();
+      if (!v) return;
+      st.key = v; save(LS_KEY, v); load();
+    };
+    kinp.onkeydown = e => { if (e.key === 'Enter') ksave.click(); };
+  }
+
+  // main screen
+  const rbtn = document.getElementById('rbtn');
+  const sbtn = document.getElementById('sbtn');
+  if (rbtn) {
+    rbtn.onclick = () => {
+      rbtn.classList.add('spinning');
+      load().then(() => rbtn.classList.remove('spinning'));
+    };
+  }
+  if (sbtn) {
+    sbtn.onclick = () => {
+      const v = prompt('Tankerkönig API-Key:', st.key);
+      if (v !== null && v.trim()) { st.key = v.trim(); save(LS_KEY, st.key); load(); }
+    };
+  }
+
+  document.querySelectorAll('[data-fuel]').forEach(el => {
+    el.onclick = () => { st.fuel = el.dataset.fuel; save(LS_FUEL, st.fuel); render(); };
+  });
+  document.querySelectorAll('[data-sort]').forEach(el => {
+    el.onclick = () => { st.sort = el.dataset.sort; save(LS_SORT, st.sort); render(); };
+  });
+  document.querySelectorAll('[data-rad]').forEach(el => {
+    el.onclick = () => { st.radius = parseInt(el.dataset.rad); save(LS_RADIUS, st.radius); load(); };
+  });
+}
+
+// auto-refresh every 5 min
+setInterval(() => { if (st.key) load(); }, 5 * 60 * 1000);
+
+// boot
+if (st.key) load(); else render();
+</script>
+</body>
+</html>
