@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tank App — Hannover</title>
+  <title>Tank App</title>
   <meta name="theme-color" content="#0a0a0b">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="icon" href="./icon-192.png" type="image/png">
@@ -13,125 +13,126 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Tank App">
   <style>
+    /* ── TOKENS ──────────────────────────────────────── */
     :root {
       --bg: #0a0a0b; --card: #18181b; --card2: #27272a; --border: #3f3f46;
       --text: #fafafa; --text2: #a1a1aa; --text3: #71717a;
-      --accent: #bae6fd; --accent-subtle: #0c2840; --radius: 12px;
+      --accent: #bae6fd; --accent-subtle: #0c2840;
+      --r: 13px; --sh: 0 1px 3px rgba(0,0,0,.5);
       --green: #4ade80; --red: #f87171; --yellow: #fbbf24;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    button, input { font-family: inherit; }
 
-    /* PTR */
-    #ptr { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; justify-content: center; align-items: center; height: 0; overflow: hidden; transition: height .15s; background: var(--card); border-bottom: 1px solid var(--border); font-size: .85rem; color: var(--text2); }
+    /* ── PTR ─────────────────────────────────────────── */
+    #ptr { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; justify-content: center; align-items: center; height: 0; overflow: hidden; transition: height .15s; background: var(--card2); border-bottom: 1px solid var(--border); font-size: .85rem; color: var(--text2); }
 
-    /* Header */
-    header { padding: 20px 16px 0; max-width: 500px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
-    .header-left h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-    .header-sub { font-size: 13px; color: var(--text3); margin-top: 2px; }
-    .header-actions { display: flex; gap: 8px; align-items: center; }
-    .icon-btn { background: var(--card2); border: 1px solid var(--border); color: var(--text2); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all 0.2s; flex-shrink: 0; }
-    .icon-btn:hover { color: var(--text); }
-    .icon-btn.spinning { animation: spin 0.8s linear infinite; }
+    /* ── TOPBAR ──────────────────────────────────────── */
+    .topbar { background: var(--card); position: sticky; top: 0; z-index: 99; border-bottom: 1px solid var(--border); }
+    .topbar-inner { max-width: 640px; margin: 0 auto; height: 52px; padding: 0 16px; display: flex; align-items: center; gap: 8px; }
+    .app-title { font-size: 1rem; font-weight: 700; flex: 1; letter-spacing: -.2px; }
+    .icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--card2); color: var(--text2); cursor: pointer; font-size: .95rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+    .icon-btn:hover { background: var(--border); color: var(--text); }
+    .icon-btn.spinning { animation: spin .8s linear infinite; }
     .icon-btn.active { background: var(--accent-subtle); border-color: var(--accent); color: var(--accent); }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Controls */
-    .controls { max-width: 500px; margin: 12px auto 0; padding: 0 16px; }
-    .opt-group { display: flex; align-items: center; gap: 6px; }
-    .opt-label { font-size: 12px; color: var(--text3); white-space: nowrap; }
-    .opt-btn { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+    /* ── CTRLBAR ─────────────────────────────────────── */
+    .ctrlbar { background: var(--card); border-bottom: 1px solid var(--border); }
+    .ctrlbar-inner { max-width: 640px; margin: 0 auto; padding: 8px 16px; display: flex; align-items: center; gap: 8px; }
+    .opt-label { font-size: .74rem; color: var(--text3); white-space: nowrap; }
+    .opt-btn { padding: 4px 10px; border-radius: 7px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: .78rem; cursor: pointer; transition: all .15s; }
     .opt-btn.active { background: var(--card2); color: var(--text); border-color: var(--text3); }
-
-    /* Statusbar */
-    .statusbar { max-width: 500px; margin: 8px auto 0; padding: 0 16px; display: flex; align-items: center; gap: 8px; }
-    .status-text { font-size: 12px; color: var(--text3); }
-    .status-err { font-size: 12px; color: var(--red); }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
     @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+    .status-text { font-size: .74rem; color: var(--text3); }
+    .status-err  { font-size: .74rem; color: var(--red); }
 
-    /* List */
-    .list { max-width: 500px; margin: 10px auto 80px; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
-    .list-divider { font-size: 11px; color: var(--text3); padding: 4px 2px; display: flex; align-items: center; gap: 8px; }
+    /* ── PAGE ────────────────────────────────────────── */
+    .page { max-width: 640px; margin: 0 auto; padding: 12px 14px 80px; display: flex; flex-direction: column; gap: 10px; }
+
+    /* ── CARD BASE ───────────────────────────────────── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--sh); overflow: hidden; }
+    .card-head { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .card-title { font-size: .72rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+    .card-sub { font-size: .7rem; color: var(--text3); margin-top: 2px; }
+    .card-body { padding: 10px 14px; }
+
+    /* ── LIST DIVIDER ────────────────────────────────── */
+    .list-divider { font-size: .7rem; color: var(--text3); padding: 2px 0; display: flex; align-items: center; gap: 8px; }
     .list-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    /* Station card */
-    .s-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: border-color 0.2s; }
-    .s-card:active { opacity: 0.85; }
+    /* ── STATION CARD ────────────────────────────────── */
+    .s-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--sh); cursor: pointer; overflow: hidden; transition: border-color .15s; }
+    .s-card:active { opacity: .85; }
     .s-card.cheapest { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
     .s-card.fav-card  { border-color: color-mix(in srgb, var(--yellow) 40%, transparent); }
 
-    .s-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .s-head { padding: 11px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 1px solid var(--border); }
     .s-info { flex: 1; min-width: 0; }
-    .s-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .s-brand { font-size: 12px; color: var(--text3); margin-top: 1px; }
-    .s-addr  { font-size: 12px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .s-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
-    .fav-btn { background: none; border: none; font-size: 17px; cursor: pointer; padding: 0; line-height: 1; transition: transform 0.15s; color: var(--text3); }
+    .s-name { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .s-brand { font-size: .7rem; color: var(--text3); margin-top: 1px; }
+    .s-addr  { font-size: .7rem; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .s-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .fav-btn { background: none; border: none; font-size: 1rem; cursor: pointer; padding: 0; line-height: 1; transition: transform .15s; color: var(--text3); }
     .fav-btn:hover { transform: scale(1.25); }
     .fav-btn.on { color: var(--yellow); }
-    .dist-badge { font-size: 12px; color: var(--text3); }
-    .open-pill { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+    .dist-badge { font-size: .7rem; color: var(--text3); }
+    .open-pill { font-size: .67rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
     .open-pill.open   { background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--accent); }
     .open-pill.closed { background: color-mix(in srgb, var(--border) 40%, var(--card)); color: var(--text3); }
 
-    .tags-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .tag { font-size: 11px; font-weight: 600; }
+    .s-body { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+    .tags-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .tag { font-size: .67rem; font-weight: 600; }
     .tag-cheapest { color: var(--accent); }
     .tag-fav      { color: var(--yellow); }
-
-    .price-row { display: flex; align-items: center; gap: 10px; }
-    .price-main { font-size: 30px; font-weight: 800; line-height: 1; color: var(--text); }
+    .price-row { display: flex; align-items: center; gap: 8px; }
+    .price-main { font-size: 1.75rem; font-weight: 800; line-height: 1; color: var(--text); }
     .price-main.accent { color: var(--accent); }
-    .trend { font-size: 17px; font-weight: 700; }
+    .trend { font-size: 1rem; font-weight: 700; }
     .trend-up   { color: var(--red); }
     .trend-down { color: var(--green); }
-    .trend-eq   { color: var(--text3); }
 
-    /* Setup */
-    .setup { max-width: 400px; margin: 80px auto; padding: 0 24px; text-align: center; }
-    .setup-icon { font-size: 44px; margin-bottom: 16px; }
-    .setup h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-    .setup p { color: var(--text2); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
-    .key-inp { width: 100%; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 13px; font-family: monospace; outline: none; transition: border-color 0.2s; }
-    .key-inp:focus { border-color: var(--accent); }
-    .key-btn { margin-top: 10px; width: 100%; padding: 12px; background: var(--accent-subtle); border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; }
-
-    .skel { background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius); height: 130px; }
-    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    .empty { text-align: center; padding: 50px 20px; color: var(--text2); font-size: 14px; }
-    .empty-icon { font-size: 32px; margin-bottom: 12px; }
-
-    /* Location Prompt */
-    .loc-prompt { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-    .loc-head { display: flex; align-items: center; gap: 8px; }
-    .loc-title { font-size: 14px; font-weight: 600; }
-    .loc-sub { font-size: 12px; color: var(--text3); }
-    .loc-gps { width: 100%; padding: 9px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-size: 15px; cursor: pointer; transition: all .15s; }
-    .loc-gps.active { background: var(--accent-subtle); border-color: color-mix(in srgb,var(--accent) 50%,transparent); color: var(--accent); }
-    .loc-sep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text3); }
-    .loc-sep::before,.loc-sep::after { content:''; flex:1; height:1px; background:var(--border); }
-    .loc-inp { width: 100%; padding: 9px 12px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; outline: none; transition: border-color .2s; }
+    /* ── LOCATION CARD ───────────────────────────────── */
+    .loc-inp { width: 100%; padding: 8px 11px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: .88rem; outline: none; transition: border-color .2s; }
     .loc-inp:focus { border-color: var(--accent); }
-    .loc-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
-    .loc-result { padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); color: var(--text); }
+    .loc-gps { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-size: .95rem; cursor: pointer; transition: all .15s; padding: 8px 12px; flex-shrink: 0; }
+    .loc-gps.active { background: var(--accent-subtle); border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent); }
+    .loc-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,.6); }
+    .loc-result { padding: 9px 12px; font-size: .84rem; cursor: pointer; border-bottom: 1px solid var(--border); color: var(--text); }
     .loc-result:last-child { border-bottom: none; }
     .loc-result:active { background: var(--card); }
-    .loc-result-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+    .loc-result-sub { font-size: .7rem; color: var(--text3); margin-top: 1px; }
 
-    /* Tank-Tip */
-    .tip-card { border-radius: var(--radius); padding: 11px 14px; display: flex; align-items: center; gap: 12px; border: 1px solid; }
+    /* ── TANK TIP ────────────────────────────────────── */
+    .tip-card { border-radius: var(--r); padding: 11px 14px; display: flex; align-items: center; gap: 12px; border: 1px solid; box-shadow: var(--sh); }
     .tip-good { background: var(--accent-subtle); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
     .tip-ok   { background: color-mix(in srgb, #fbbf24 8%, var(--card)); border-color: color-mix(in srgb, #fbbf24 30%, transparent); }
     .tip-warn { background: var(--card); border-color: var(--border); }
-    .tip-icon { font-size: 18px; flex-shrink: 0; }
+    .tip-icon { font-size: 1.1rem; flex-shrink: 0; }
     .tip-body { display: flex; flex-direction: column; gap: 2px; }
-    .tip-text { font-size: 13px; font-weight: 600; }
+    .tip-text { font-size: .84rem; font-weight: 600; }
     .tip-good .tip-text { color: var(--accent); }
     .tip-ok   .tip-text { color: #fbbf24; }
     .tip-warn .tip-text { color: var(--text2); }
-    .tip-sub  { font-size: 11px; color: var(--text3); }
+    .tip-sub  { font-size: .7rem; color: var(--text3); }
 
+    /* ── SETUP ───────────────────────────────────────── */
+    .setup { max-width: 400px; margin: 80px auto; padding: 0 24px; text-align: center; }
+    .setup-icon { font-size: 2.8rem; margin-bottom: 16px; }
+    .setup h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+    .setup p { color: var(--text2); font-size: .88rem; line-height: 1.6; margin-bottom: 24px; }
+    .key-inp { width: 100%; padding: 11px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: .84rem; font-family: monospace; outline: none; transition: border-color .2s; }
+    .key-inp:focus { border-color: var(--accent); }
+    .key-btn { margin-top: 10px; width: 100%; padding: 11px; background: var(--accent-subtle); border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: .94rem; font-weight: 600; cursor: pointer; }
+
+    /* ── SKEL / EMPTY ────────────────────────────────── */
+    .skel { background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--r); height: 110px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .empty { text-align: center; padding: 50px 20px; color: var(--text2); font-size: .9rem; }
+    .empty-icon { font-size: 2rem; margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -173,7 +174,6 @@ let st = {
 
 /* ── Sort + Cheapest ─────────────────────────────── */
 function sortedStations() {
-  // sort by price, then by distance if price is equal
   const list = [...st.stations].sort((a, b) => {
     const pa = num(a[FUEL]) || 9999, pb = num(b[FUEL]) || 9999;
     return pa !== pb ? pa - pb : (a.dist || 0) - (b.dist || 0);
@@ -206,9 +206,8 @@ async function getIpLoc() {
       return { lat: st.ipLoc.lat, lng: st.ipLoc.lng };
     }
   } catch {}
-  return null; // kein Standort → Prompt anzeigen
+  return null;
 }
-
 async function getPos() {
   if (st.useGps) {
     if (st.gpsPos) return st.gpsPos;
@@ -234,7 +233,6 @@ async function load() {
     const url  = `https://creativecommons.tankerkoenig.de/json/list.php?lat=${pos.lat}&lng=${pos.lng}&rad=${st.radius}&sort=dist&type=all&apikey=${st.key}`;
     const data = await fetch(url).then(r => r.json());
     if (!data.ok) throw new Error(data.message || 'API-Fehler');
-    // save previous prices for trend arrows
     const prev = {};
     st.stations.forEach(s => { if (num(s[FUEL])) prev[s.id] = s[FUEL]; });
     st.prevPrices = prev;
@@ -249,26 +247,24 @@ async function load() {
 /* ── Tank Tip ────────────────────────────────────── */
 function tankTip() {
   const h = new Date().getHours();
-  const d = new Date().getDay(); // 0=So, 6=Sa
-  if (d === 0 || d === 6)     return { cls:'tip-warn', icon:'⚠️', text:'Wochenende — tendenziell teurer',  sub:'Werktags 18–20 Uhr meist günstiger' };
-  if (h >= 18 && h < 21)      return { cls:'tip-good', icon:'✅', text:'Jetzt tanken!',                    sub:'Mo–Mi abends meist am günstigsten' };
-  if (h >= 6  && h < 8)       return { cls:'tip-good', icon:'✅', text:'Gute Zeit zum Tanken',             sub:'Früh morgens oft günstig' };
-  if (h >= 10 && h < 13)      return { cls:'tip-warn', icon:'⚠️', text:'Preise steigen oft gerade',        sub:'Wenn möglich, bis 18 Uhr warten' };
-  if (h >= 16 && h < 18)      return { cls:'tip-warn', icon:'⚠️', text:'Preisanstieg möglich',             sub:'In 1–2 Std. wieder günstiger' };
-  return                               { cls:'tip-ok',  icon:'🕐', text:'Geht so',                         sub:'Abends 18–20 Uhr meist günstiger' };
+  const d = new Date().getDay();
+  if (d === 0 || d === 6)    return { cls:'tip-warn', icon:'⚠️', text:'Wochenende — tendenziell teurer',  sub:'Werktags 18–20 Uhr meist günstiger' };
+  if (h >= 18 && h < 21)     return { cls:'tip-good', icon:'✅', text:'Jetzt tanken!',                    sub:'Mo–Mi abends meist am günstigsten' };
+  if (h >= 6  && h < 8)      return { cls:'tip-good', icon:'✅', text:'Gute Zeit zum Tanken',             sub:'Früh morgens oft günstig' };
+  if (h >= 10 && h < 13)     return { cls:'tip-warn', icon:'⚠️', text:'Preise steigen oft gerade',        sub:'Wenn möglich, bis 18 Uhr warten' };
+  if (h >= 16 && h < 18)     return { cls:'tip-warn', icon:'⚠️', text:'Preisanstieg möglich',             sub:'In 1–2 Std. wieder günstiger' };
+  return                              { cls:'tip-ok',  icon:'🕐', text:'Geht so',                         sub:'Abends 18–20 Uhr meist günstiger' };
 }
 function renderTankTip() {
   const t = tankTip();
   return `<div class="tip-card ${t.cls}"><div class="tip-icon">${t.icon}</div><div class="tip-body"><div class="tip-text">${t.text}</div><div class="tip-sub">${t.sub}</div></div></div>`;
 }
 
-
 /* ── City Search ─────────────────────────────────── */
 async function searchCities(q) {
   if (q.length < 2) { st.locSearch.results = []; renderLocResults(); return; }
   try {
     const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=20&language=de`).then(r => r.json());
-    // filter Germany, deduplicate by name, keep max 3
     const seen = new Set();
     st.locSearch.results = (r.results || []).filter(c => {
       if (c.country_code !== 'DE') return false;
@@ -300,14 +296,21 @@ function selectCity(i) {
 function renderLocPrompt() {
   const noLoc = !st.ipLoc && !st.useGps;
   return `
-  <div class="loc-prompt">
-    ${noLoc ? `<div><div class="loc-title">📍 Standort nicht erkannt</div><div class="loc-sub">Aktiviere GPS oder suche deine Stadt</div></div>` : ''}
-    <div style="position:relative;">
-      <div style="display:flex;gap:8px;">
-        <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}" style="flex:1;">
-        <button class="loc-gps${st.useGps ? ' active' : ''}" onclick="toggleGps()" style="width:auto;padding:9px 12px;flex-shrink:0;">📍</button>
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">${noLoc ? '📍 Standort nicht erkannt' : 'Stadt / Standort'}</div>
+        ${noLoc ? `<div class="card-sub">Aktiviere GPS oder suche deine Stadt</div>` : ''}
       </div>
-      <div id="loc-results" class="loc-results"></div>
+    </div>
+    <div class="card-body">
+      <div style="position:relative;">
+        <div style="display:flex;gap:8px;">
+          <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}" style="flex:1;">
+          <button class="loc-gps${st.useGps ? ' active' : ''}" onclick="toggleGps()">📍</button>
+        </div>
+        <div id="loc-results" class="loc-results"></div>
+      </div>
     </div>
   </div>`;
 }
@@ -323,7 +326,7 @@ function renderSetup() {
   <div class="setup">
     <div class="setup-icon">⛽</div>
     <h2>Tank App</h2>
-    <p>Gib deinen Tankerkönig API-Key ein um E10-Preise zu sehen.</p>
+    <p>Gib deinen Tankerkönig API-Key ein um E10-Preise in deiner Nähe zu sehen.</p>
     <input class="key-inp" id="kinp" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
     <button class="key-btn" id="ksave">Speichern &amp; starten</button>
   </div>`;
@@ -334,7 +337,6 @@ function renderMain() {
   const minPrice = cheapestOf(all);
   const hasCache = st.stations.length > 0;
   const city = st.useGps && st.gpsPos ? 'GPS' : (st.ipLoc?.city || FALLBACK.city);
-  const loc = `${city} · ${st.radius}\u202fkm`;
 
   const mkCards = list => list.map(s => renderCard(s, minPrice)).join('');
   let cardsHtml;
@@ -348,37 +350,29 @@ function renderMain() {
     cardsHtml = mkCards(all);
   }
 
+  const statusHtml = st.error
+    ? `<span class="status-err">Fehler: ${st.error}</span>`
+    : st.updated
+      ? `${st.loading ? '<span class="status-dot"></span>' : ''}<span class="status-text">${st.loading ? 'Aktualisiere…' : 'Stand: ' + fmtTime(st.updated)} · ${all.length} Stationen</span>`
+      : st.loading ? `<span class="status-dot"></span><span class="status-text">Lade…</span>` : '';
+
   return `
-  <header>
-    <div class="header-left">
-      <h1>⛽ Tank App</h1>
-      <div class="header-sub">${loc} Umkreis</div>
-    </div>
-    <div class="header-actions">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="app-title">⛽ Tank App</div>
       <button class="icon-btn" id="sbtn" title="API-Key">⚙</button>
       <button class="icon-btn${st.loading ? ' spinning' : ''}" id="rbtn" title="Aktualisieren">↻</button>
     </div>
-  </header>
-
-  <div class="controls">
-    <div class="opt-group">
-      <span class="opt-label">Umkreis:</span>
+  </div>
+  <div class="ctrlbar">
+    <div class="ctrlbar-inner">
+      <span class="opt-label">Umkreis</span>
       ${RADII.map(r => `<button class="opt-btn${st.radius===r?' active':''}" data-rad="${r}">${r}&thinsp;km</button>`).join('')}
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:center;gap:5px;">${statusHtml}</div>
     </div>
   </div>
-
-  <div class="statusbar">
-    ${st.loading ? '<div class="status-dot"></div>' : ''}
-    <div class="${st.error ? 'status-err' : 'status-text'}">
-      ${st.error
-        ? 'Fehler: ' + st.error + (st.updated ? ' · ' + fmtTime(st.updated) : '')
-        : st.updated
-          ? (st.loading ? 'Aktualisiere…' : 'Stand: ' + fmtTime(st.updated)) + ' · ' + all.length + ' Stationen'
-          : st.loading ? 'Lade…' : ''}
-    </div>
-  </div>
-
-  <div class="list">
+  <div class="page">
     ${renderLocPrompt()}
     ${renderTankTip()}
     ${cardsHtml}
@@ -396,10 +390,15 @@ function renderCard(s, minPrice) {
   ].filter(Boolean).join('');
 
   const cls = ['s-card', isMin ? 'cheapest' : '', isFav ? 'fav-card' : ''].filter(Boolean).join(' ');
+  const trendArrow = (() => {
+    const prev = st.prevPrices[s.id];
+    if (!prev || !p || Math.abs(p - prev) < 0.001) return '';
+    return p < prev ? `<span class="trend trend-down">↓</span>` : `<span class="trend trend-up">↑</span>`;
+  })();
 
   return `
   <div class="${cls}" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}','_blank')">
-    <div class="s-top">
+    <div class="s-head">
       <div class="s-info">
         <div class="s-name">${s.name || s.brand || 'Tankstelle'}</div>
         ${s.brand ? `<div class="s-brand">${s.brand}</div>` : ''}
@@ -411,10 +410,12 @@ function renderCard(s, minPrice) {
         <span class="open-pill ${s.isOpen?'open':'closed'}">${s.isOpen ? 'Offen' : 'Zu'}</span>
       </div>
     </div>
-    ${tags ? `<div class="tags-row">${tags}</div>` : ''}
-    <div class="price-row">
-      <div class="price-main${isMin ? ' accent' : ''}">${fmt(s[FUEL])}</div>
-      ${(()=>{ const prev = st.prevPrices[s.id]; if (!prev || !p || Math.abs(p-prev)<0.001) return ''; return p<prev ? `<span class="trend trend-down">↓</span>` : `<span class="trend trend-up">↑</span>`; })()}
+    <div class="s-body">
+      ${tags ? `<div class="tags-row">${tags}</div>` : ''}
+      <div class="price-row">
+        <div class="price-main${isMin ? ' accent' : ''}">${fmt(s[FUEL])}</div>
+        ${trendArrow}
+      </div>
     </div>
   </div>`;
 }
@@ -439,7 +440,6 @@ function attach() {
   });
   const locInp = document.getElementById('loc-inp');
   if (locInp) {
-    locInp.focus();
     locInp.oninput = e => {
       st.locSearch.query = e.target.value;
       clearTimeout(st.locSearch.timer);
@@ -449,7 +449,7 @@ function attach() {
 }
 
 /* ── Pull-to-Refresh ─────────────────────────────── */
-const ptr_el = document.getElementById('ptr');
+const ptr_el   = document.getElementById('ptr');
 const ptr_icon = document.getElementById('ptr-icon');
 let ptr_startY = 0, ptr_pulling = false;
 document.addEventListener('touchstart', e => { ptr_startY = window.scrollY < 5 ? e.touches[0].clientY : 0; }, { passive: true });
