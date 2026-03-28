@@ -26,11 +26,16 @@ def main():
     except Exception:
         result = {'region': 'Hannover', 'days': []}
 
+    current_min = round(min(open_e10 if open_e10 else all_e10), 3)
+    current_max = round(max(all_e10), 3)
+
+    existing = next((d for d in result.get('days', []) if d['date'] == today_str), None)
     days = [d for d in result.get('days', []) if d['date'] != today_str]
     days.append({
         'date':    today_str,
-        'e10_min': round(min(open_e10 if open_e10 else all_e10), 3),
-        'e10_max': round(max(all_e10), 3),
+        # accumulate: keep lower min and higher max seen today
+        'e10_min': min(current_min, existing['e10_min']) if existing else current_min,
+        'e10_max': max(current_max, existing['e10_max']) if existing else current_max,
     })
     days.sort(key=lambda x: x['date'])
     days = days[-7:]

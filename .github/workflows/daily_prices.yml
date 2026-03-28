@@ -2,7 +2,7 @@ name: Daily E10 Prices
 
 on:
   schedule:
-    - cron: '0 11 * * *'   # 11:00 UTC = 12:00 CET / 13:00 CEST
+    - cron: '0 6,8,10,12,14,16,18,20 * * *'  # alle 2h, 8-22 Uhr MEZ
   workflow_dispatch:
 
 jobs:
