@@ -301,8 +301,13 @@ function renderLocPrompt() {
   const noLoc = !st.ipLoc && !st.useGps;
   return `
   <div class="card overflow-visible">
-    ${noLoc ? `<div class="card-head"><div class="card-title">📍 Standort nicht erkannt</div><div class="card-sub">Aktiviere GPS oder suche deine Stadt</div></div>` : ''}
-    <div class="card-body">
+    <div class="card-head" style="border-bottom:none;">
+      <div>
+        <div class="card-title">${noLoc ? '📍 Standort nicht erkannt' : 'Stadt / Standort'}</div>
+        ${noLoc ? `<div class="card-sub">Aktiviere GPS oder suche deine Stadt</div>` : ''}
+      </div>
+    </div>
+    <div class="card-body" style="padding-top:0;">
       <div style="position:relative;">
         <div style="display:flex;gap:8px;">
           <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}" style="flex:1;">
