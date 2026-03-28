@@ -122,8 +122,8 @@
 <div id="app"></div>
 <script>
 /* ── Keys ────────────────────────────────────────── */
-const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', favs:'t_favs', gps:'t_gps' };
-const HANNOVER = { lat: 52.3759, lng: 9.7320 };
+const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', favs:'t_favs', gps:'t_gps', loc:'t_loc' };
+const FALLBACK = { lat: 52.3759, lng: 9.7320, city: 'Hannover' };
 const RADII    = [3, 5, 10];
 const FUEL     = 'e10';
 
@@ -145,6 +145,7 @@ let st = {
   favs:     lsJson(LS.favs, []),
   useGps:   lsGet(LS.gps) === '1',
   gpsPos:       null,
+  ipLoc:        lsJson(LS.loc, null),
   stations:     cached?.stations || [],
   updated:      cached?.ts ? new Date(cached.ts) : null,
   prevPrices:   {},
@@ -176,17 +177,32 @@ function toggleFav(id, e) {
   render();
 }
 
-/* ── GPS ─────────────────────────────────────────── */
+/* ── Location ────────────────────────────────────── */
+async function getIpLoc() {
+  if (st.ipLoc) return { lat: st.ipLoc.lat, lng: st.ipLoc.lng };
+  try {
+    const r = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(5000) }).then(r => r.json());
+    if (r.success && r.latitude) {
+      st.ipLoc = { lat: r.latitude, lng: r.longitude, city: r.city || r.region || 'Mein Standort' };
+      lsJsonSet(LS.loc, st.ipLoc);
+      return { lat: st.ipLoc.lat, lng: st.ipLoc.lng };
+    }
+  } catch {}
+  return { lat: FALLBACK.lat, lng: FALLBACK.lng };
+}
+
 async function getPos() {
-  if (!st.useGps) return HANNOVER;
-  if (st.gpsPos) return st.gpsPos;
-  return new Promise(resolve => {
-    navigator.geolocation.getCurrentPosition(
-      p => { st.gpsPos = { lat: p.coords.latitude, lng: p.coords.longitude }; resolve(st.gpsPos); },
-      () => resolve(HANNOVER),
-      { timeout: 8000, maximumAge: 60000 }
-    );
-  });
+  if (st.useGps) {
+    if (st.gpsPos) return st.gpsPos;
+    return new Promise(resolve => {
+      navigator.geolocation.getCurrentPosition(
+        p => { st.gpsPos = { lat: p.coords.latitude, lng: p.coords.longitude }; resolve(st.gpsPos); },
+        () => getIpLoc().then(resolve),
+        { timeout: 8000, maximumAge: 60000 }
+      );
+    });
+  }
+  return getIpLoc();
 }
 function toggleGps() { st.useGps = !st.useGps; st.gpsPos = null; lsSet(LS.gps, st.useGps ? '1' : '0'); load(); }
 
@@ -250,7 +266,8 @@ function renderMain() {
   const { favs, rest, all } = sortedStations();
   const minPrice = cheapestOf(all);
   const hasCache = st.stations.length > 0;
-  const loc = st.useGps && st.gpsPos ? `GPS · ${st.radius}\u202fkm` : `Hannover · ${st.radius}\u202fkm`;
+  const city = st.useGps && st.gpsPos ? 'GPS' : (st.ipLoc?.city || FALLBACK.city);
+  const loc = `${city} · ${st.radius}\u202fkm`;
 
   const mkCards = list => list.map(s => renderCard(s, minPrice)).join('');
   let cardsHtml;
