@@ -167,8 +167,7 @@ async function load() {
   st.loading = true; st.error = null;
   render();  // show cached data + loading dot immediately
 
-  const fp  = st.fuel === 'alle' ? 'all' : st.fuel;
-  const url = `https://creativecommons.tankerkoenig.de/json/list.php?lat=${HANNOVER.lat}&lng=${HANNOVER.lng}&rad=${st.radius}&sort=dist&type=${fp}&apikey=${st.key}`;
+  const url = `https://creativecommons.tankerkoenig.de/json/list.php?lat=${HANNOVER.lat}&lng=${HANNOVER.lng}&rad=${st.radius}&sort=dist&type=all&apikey=${st.key}`;
   try {
     const res  = await fetch(url);
     const data = await res.json();
