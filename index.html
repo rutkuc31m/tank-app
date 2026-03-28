@@ -105,6 +105,7 @@
     .loc-gps { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-size: .95rem; cursor: pointer; transition: all .15s; padding: 8px 12px; flex-shrink: 0; }
     .loc-gps.active { background: var(--accent-subtle); border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent); }
     .loc-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,.6); }
+    .loc-results:empty { display: none; }
     .loc-result { padding: 9px 12px; font-size: .84rem; cursor: pointer; border-bottom: 1px solid var(--border); color: var(--text); }
     .loc-result:last-child { border-bottom: none; }
     .loc-result:active { background: var(--card); }
