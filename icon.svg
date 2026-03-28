@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- background -->
+  <rect width="512" height="512" rx="96" fill="#0a0a0b"/>
+  <!-- fuel pump body -->
+  <rect x="120" y="180" width="160" height="220" rx="12" fill="#27272a" stroke="#3f3f46" stroke-width="6"/>
+  <!-- pump screen -->
+  <rect x="140" y="205" width="120" height="70" rx="8" fill="#0c2840" stroke="#bae6fd" stroke-width="3"/>
+  <!-- E10 text on screen -->
+  <text x="200" y="252" font-family="system-ui,sans-serif" font-size="32" font-weight="700" fill="#bae6fd" text-anchor="middle">E10</text>
+  <!-- pump nozzle arm -->
+  <rect x="280" y="210" width="12" height="80" rx="6" fill="#3f3f46"/>
+  <!-- nozzle -->
+  <rect x="280" y="278" width="70" height="12" rx="6" fill="#3f3f46"/>
+  <rect x="338" y="270" width="12" height="28" rx="6" fill="#bae6fd"/>
+  <!-- hose curl detail -->
+  <path d="M292 290 Q310 310 330 295" stroke="#71717a" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- base -->
+  <rect x="110" y="400" width="180" height="18" rx="9" fill="#27272a"/>
+  <!-- price display dots -->
+  <circle cx="155" cy="310" r="6" fill="#bae6fd" opacity="0.7"/>
+  <circle cx="180" cy="310" r="6" fill="#bae6fd" opacity="0.7"/>
+  <circle cx="205" cy="310" r="6" fill="#bae6fd" opacity="0.7"/>
+  <!-- fuel drop accent -->
+  <path d="M340 140 C340 140 310 110 310 135 C310 152 323 162 340 162 C357 162 370 152 370 135 C370 110 340 140 340 140Z" fill="#bae6fd"/>
+</svg>
