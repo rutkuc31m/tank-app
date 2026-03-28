@@ -267,10 +267,11 @@ function renderTankTip() {
 async function searchCities(q) {
   if (q.length < 2) { st.locSearch.results = []; renderLocResults(); return; }
   try {
-    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=10&language=de&countryCode=DE`).then(r => r.json());
-    // deduplicate by name, keep max 3
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=20&language=de`).then(r => r.json());
+    // filter Germany, deduplicate by name, keep max 3
     const seen = new Set();
     st.locSearch.results = (r.results || []).filter(c => {
+      if (c.country_code !== 'DE') return false;
       const key = c.name.toLowerCase();
       if (seen.has(key)) return false;
       seen.add(key);
