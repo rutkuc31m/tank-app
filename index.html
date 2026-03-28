@@ -113,7 +113,6 @@
     .loc-sep::before,.loc-sep::after { content:''; flex:1; height:1px; background:var(--border); }
     .loc-inp { width: 100%; padding: 9px 12px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; outline: none; transition: border-color .2s; }
     .loc-inp:focus { border-color: var(--accent); }
-    .loc-search-wrap { position: relative; }
     .loc-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
     .loc-result { padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); color: var(--text); }
     .loc-result:last-child { border-bottom: none; }
@@ -303,12 +302,12 @@ function renderLocPrompt() {
   return `
   <div class="loc-prompt">
     ${noLoc ? `<div><div class="loc-title">📍 Standort nicht erkannt</div><div class="loc-sub">Aktiviere GPS oder suche deine Stadt</div></div>` : ''}
-    <div class="loc-search-wrap" style="display:flex;gap:8px;align-items:center;">
-      <div style="position:relative;flex:1;">
-        <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}">
-        <div id="loc-results"></div>
+    <div style="position:relative;">
+      <div style="display:flex;gap:8px;">
+        <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}" style="flex:1;">
+        <button class="loc-gps${st.useGps ? ' active' : ''}" onclick="toggleGps()" style="width:auto;padding:9px 12px;flex-shrink:0;">📍</button>
       </div>
-      <button class="loc-gps${st.useGps ? ' active' : ''}" onclick="toggleGps()" style="width:auto;padding:9px 12px;">📍</button>
+      <div id="loc-results" class="loc-results"></div>
     </div>
   </div>`;
 }
