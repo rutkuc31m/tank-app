@@ -281,14 +281,10 @@ function selectCity(i) {
   load();
 }
 function renderLocPrompt() {
-  const noLoc = !st.ipLoc && !st.useGps;
   return `
   <div class="card overflow-visible">
     <div class="card-head" style="border-bottom:none;">
-      <div>
-        <div class="card-title">${noLoc ? '📍 Standort nicht erkannt' : 'Stadt / Standort'}</div>
-        ${noLoc ? `<div class="card-sub">Aktiviere GPS oder suche deine Stadt</div>` : ''}
-      </div>
+      <div class="card-title">Stadt / Standort</div>
     </div>
     <div class="card-body" style="padding-top:0;">
       <div style="position:relative;">
