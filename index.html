@@ -367,7 +367,8 @@ function renderCard(s, minPrice) {
   const trendArrow = (() => {
     const prev = st.prevPrices[s.id];
     if (!prev || !p || Math.abs(p - prev) < 0.001) return '';
-    return p < prev ? `<span class="trend trend-down">↓</span>` : `<span class="trend trend-up">↑</span>`;
+    const prevFmt = prev.toFixed(3).replace('.', ',');
+    return p < prev ? `<span class="trend trend-down">↓ <span style="font-size:.75rem;font-weight:400;">(${prevFmt})</span></span>` : `<span class="trend trend-up">↑ <span style="font-size:.75rem;font-weight:400;">(${prevFmt})</span></span>`;
   })();
 
   return `
