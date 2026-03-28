@@ -337,7 +337,7 @@ function renderMain() {
   const statusHtml = st.error
     ? `<span class="status-err">Fehler: ${st.error}</span>`
     : st.updated
-      ? `${st.loading ? '<span class="status-dot"></span>' : ''}<span class="status-text">${st.loading ? 'Aktualisiere…' : 'Stand: ' + fmtTime(st.updated)} · ${all.length} Stationen</span>`
+      ? `${st.loading ? '<span class="status-dot"></span>' : ''}<span class="status-text">${st.loading ? 'Aktualisiere…' : 'Stand: ' + fmtTime(st.updated)}</span>`
       : st.loading ? `<span class="status-dot"></span><span class="status-text">Lade…</span>` : '';
 
   return `
