@@ -71,18 +71,13 @@
     .s-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--sh); cursor: pointer; overflow: hidden; transition: border-color .15s; }
     .s-card:active { opacity: .85; }
     .s-card.cheapest { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
-    .s-card.fav-card  { border-color: color-mix(in srgb, var(--yellow) 40%, transparent); }
-
-    .s-head { padding: 11px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 1px solid var(--border); }
+    .s-head {padding: 11px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 1px solid var(--border); }
     .s-info { flex: 1; min-width: 0; }
     .s-name { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .s-brand { font-size: .7rem; color: var(--text3); margin-top: 1px; }
     .s-addr  { font-size: .7rem; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .s-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-    .fav-btn { background: none; border: none; font-size: 1rem; cursor: pointer; padding: 0; line-height: 1; transition: transform .15s; color: var(--text3); }
-    .fav-btn:hover { transform: scale(1.25); }
-    .fav-btn.on { color: var(--yellow); }
-    .dist-badge { font-size: .7rem; color: var(--text3); }
+    .dist-badge {font-size: .7rem; color: var(--text3); }
     .open-pill { font-size: .67rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
     .open-pill.open   { background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--accent); }
     .open-pill.closed { background: color-mix(in srgb, var(--border) 40%, var(--card)); color: var(--text3); }
@@ -91,7 +86,6 @@
     .tags-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
     .tag { font-size: .67rem; font-weight: 600; }
     .tag-cheapest { color: var(--accent); }
-    .tag-fav      { color: var(--yellow); }
     .price-row { display: flex; align-items: center; gap: 8px; }
     .price-main { font-size: 1.75rem; font-weight: 800; line-height: 1; color: var(--text); }
     .price-main.accent { color: var(--accent); }
@@ -145,7 +139,7 @@
 <div id="app"></div>
 <script>
 /* ── Keys ────────────────────────────────────────── */
-const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', favs:'t_favs', gps:'t_gps', loc:'t_loc' };
+const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', gps:'t_gps', loc:'t_loc' };
 const FALLBACK = { lat: 52.3759, lng: 9.7320, city: 'Hannover' };
 const RADII    = [3, 5, 10];
 const FUEL     = 'e10';
@@ -165,7 +159,6 @@ const cached = lsJson(LS.cache, null);
 let st = {
   key:      lsGet(LS.key),
   radius:   parseInt(lsGet(LS.radius, '10')) || 10,
-  favs:     lsJson(LS.favs, []),
   useGps:   lsGet(LS.gps) === '1',
   gpsPos:       null,
   ipLoc:        lsJson(LS.loc, null),
@@ -179,25 +172,14 @@ let st = {
 
 /* ── Sort + Cheapest ─────────────────────────────── */
 function sortedStations() {
-  const list = [...st.stations].sort((a, b) => {
+  return [...st.stations].sort((a, b) => {
     const pa = num(a[FUEL]) || 9999, pb = num(b[FUEL]) || 9999;
     return pa !== pb ? pa - pb : (a.dist || 0) - (b.dist || 0);
-  });
-  const top10 = list.slice(0, 10);
-  return { favs: top10.filter(s => st.favs.includes(s.id)), rest: top10.filter(s => !st.favs.includes(s.id)), all: top10 };
+  }).slice(0, 10);
 }
 function cheapestOf(list) {
   const ps = list.filter(s => s.isOpen).map(s => num(s[FUEL])).filter(Boolean);
   return ps.length ? Math.min(...ps) : null;
-}
-
-/* ── Favorites ───────────────────────────────────── */
-function toggleFav(id, e) {
-  e.stopPropagation();
-  const i = st.favs.indexOf(id);
-  if (i >= 0) st.favs.splice(i, 1); else st.favs.push(id);
-  lsJsonSet(LS.favs, st.favs);
-  render();
 }
 
 /* ── Location ────────────────────────────────────── */
@@ -338,21 +320,18 @@ function renderSetup() {
 }
 
 function renderMain() {
-  const { favs, rest, all } = sortedStations();
+  const all = sortedStations();
   const minPrice = cheapestOf(all);
   const hasCache = st.stations.length > 0;
   const city = st.useGps && st.gpsPos ? 'GPS' : (st.ipLoc?.city || FALLBACK.city);
 
-  const mkCards = list => list.map(s => renderCard(s, minPrice)).join('');
   let cardsHtml;
   if (st.loading && !hasCache) {
     cardsHtml = Array(5).fill(0).map(() => `<div class="skel"></div>`).join('');
   } else if (!all.length) {
     cardsHtml = `<div class="empty"><div class="empty-icon">🔍</div>Keine Stationen gefunden</div>`;
-  } else if (favs.length && rest.length) {
-    cardsHtml = mkCards(favs) + `<div class="list-divider">Alle Stationen</div>` + mkCards(rest);
   } else {
-    cardsHtml = mkCards(all);
+    cardsHtml = all.map(s => renderCard(s, minPrice)).join('');
   }
 
   const statusHtml = st.error
@@ -387,14 +366,7 @@ function renderMain() {
 function renderCard(s, minPrice) {
   const p     = num(s[FUEL]);
   const isMin = minPrice !== null && p === minPrice;
-  const isFav = st.favs.includes(s.id);
-
-  const tags = [
-    isMin ? `<span class="tag tag-cheapest">★ Günstigste E10</span>` : '',
-    isFav ? `<span class="tag tag-fav">♥ Favorit</span>` : '',
-  ].filter(Boolean).join('');
-
-  const cls = ['s-card', isMin ? 'cheapest' : '', isFav ? 'fav-card' : ''].filter(Boolean).join(' ');
+  const cls   = 's-card' + (isMin ? ' cheapest' : '');
   const trendArrow = (() => {
     const prev = st.prevPrices[s.id];
     if (!prev || !p || Math.abs(p - prev) < 0.001) return '';
@@ -410,13 +382,12 @@ function renderCard(s, minPrice) {
         <div class="s-addr">${[s.street, s.place].filter(Boolean).join(', ')}</div>
       </div>
       <div class="s-right">
-        <button class="fav-btn${isFav?' on':''}" onclick="toggleFav('${s.id}',event)">${isFav ? '♥' : '♡'}</button>
         <span class="dist-badge">${s.dist ? s.dist.toFixed(1)+'\u202fkm' : ''}</span>
         <span class="open-pill ${s.isOpen?'open':'closed'}">${s.isOpen ? 'Offen' : 'Zu'}</span>
       </div>
     </div>
     <div class="s-body">
-      ${tags ? `<div class="tags-row">${tags}</div>` : ''}
+      ${isMin ? `<div class="tags-row"><span class="tag tag-cheapest">★ Günstigste E10</span></div>` : ''}
       <div class="price-row">
         <div class="price-main${isMin ? ' accent' : ''}">${fmt(s[FUEL])}</div>
         ${trendArrow}
