@@ -267,7 +267,7 @@ function renderTankTip() {
 async function searchCities(q) {
   if (q.length < 2) { st.locSearch.results = []; renderLocResults(); return; }
   try {
-    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=de&countryCode=DE`).then(r => r.json());
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=3&language=de&countryCode=DE`).then(r => r.json());
     st.locSearch.results = r.results || [];
   } catch { st.locSearch.results = []; }
   renderLocResults();
