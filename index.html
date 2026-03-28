@@ -110,14 +110,12 @@
 <div id="app"></div>
 <script>
 const LS_KEY    = 't_key';
-const LS_FUEL   = 't_fuel';
 const LS_RADIUS = 't_radius';
 const LS_CACHE  = 't_cache';
 
-const HANNOVER    = { lat: 52.3759, lng: 9.7320 };
-const FUELS       = ['alle','e5','e10','diesel'];
-const FUEL_LABEL  = { alle:'Alle', e5:'E5', e10:'E10', diesel:'Diesel' };
-const RADII       = [3, 5, 10];
+const HANNOVER = { lat: 52.3759, lng: 9.7320 };
+const RADII    = [3, 5, 10];
+const FUEL     = 'e10';
 
 // restore cache
 let cachedStations = [], cachedUpdated = null;
@@ -127,9 +125,8 @@ try {
 } catch(_) {}
 
 let st = {
-  key:      localStorage.getItem(LS_KEY)    || '',
-  fuel:     localStorage.getItem(LS_FUEL)   || 'e5',
-  radius:   parseInt(localStorage.getItem(LS_RADIUS)) || 10,
+  key:    localStorage.getItem(LS_KEY) || '',
+  radius: parseInt(localStorage.getItem(LS_RADIUS)) || 10,
   stations: cachedStations,
   loading:  false,
   error:    null,
@@ -145,19 +142,14 @@ function fmt(p) {
   return p.toFixed(3).replace('.', ',') + '\u202f€';
 }
 
-function cheapestOf(list, fuel) {
-  if (fuel === 'alle') return null;
+function cheapestOf(list) {
   const open   = list.filter(s => s.isOpen);
-  const prices = open.map(s => num(s[fuel])).filter(Boolean);
+  const prices = open.map(s => num(s[FUEL])).filter(Boolean);
   return prices.length ? Math.min(...prices) : null;
 }
 
 function sorted() {
-  let list = [...st.stations];
-  if (st.fuel !== 'alle') {
-    list.sort((a, b) => (num(a[st.fuel]) || 9999) - (num(b[st.fuel]) || 9999));
-  }
-  return list;
+  return [...st.stations].sort((a, b) => (num(a[FUEL]) || 9999) - (num(b[FUEL]) || 9999));
 }
 
 async function load() {
@@ -201,7 +193,7 @@ function renderSetup() {
 
 function renderMain() {
   const list     = sorted();
-  const minPrice = cheapestOf(list, st.fuel);
+  const minPrice = cheapestOf(list);
   const hasCache = st.stations.length > 0;
 
   // show skeletons only on first load (no cache at all)
@@ -224,9 +216,6 @@ function renderMain() {
   </header>
 
   <div class="controls">
-    <div class="tabs">
-      ${FUELS.map(f => `<button class="tab${st.fuel===f?' active':''}" data-fuel="${f}">${FUEL_LABEL[f]}</button>`).join('')}
-    </div>
     <div class="opts-row">
       <div class="opt-group">
         <span class="opt-label">Umkreis:</span>
@@ -254,19 +243,9 @@ function fmtTime(d) {
 }
 
 function renderCard(s, minPrice) {
-  const isMin = minPrice !== null && num(s[st.fuel]) === minPrice;
-  const fuels = ['e5','e10','diesel'];
-
-  const priceBlocks = fuels.map(f => {
-    const isSel    = st.fuel === f;
-    const p        = num(s[f]);
-    const isAccent = isSel && isMin && p;
-    return `
-    <div class="p-item${isSel ? ' sel' : ''}">
-      <div class="p-type">${FUEL_LABEL[f]}</div>
-      <div class="p-val${isAccent ? ' accent' : p ? '' : ' na'}">${fmt(s[f])}</div>
-    </div>`;
-  }).join('');
+  const isMin   = minPrice !== null && num(s[FUEL]) === minPrice;
+  const p       = num(s[FUEL]);
+  const e10cls  = isMin && p ? ' accent' : p ? '' : ' na';
 
   return `
   <div class="s-card${isMin ? ' cheapest' : ''}">
@@ -281,8 +260,21 @@ function renderCard(s, minPrice) {
         <span class="open-pill ${s.isOpen ? 'open' : 'closed'}">${s.isOpen ? 'Offen' : 'Zu'}</span>
       </div>
     </div>
-    ${isMin ? `<div class="cheapest-tag">★ Günstigste ${FUEL_LABEL[st.fuel]}-Tankstelle</div>` : ''}
-    <div class="prices">${priceBlocks}</div>
+    ${isMin ? `<div class="cheapest-tag">★ Günstigste E10-Tankstelle</div>` : ''}
+    <div class="prices">
+      <div class="p-item">
+        <div class="p-type">E5</div>
+        <div class="p-val${num(s.e5) ? '' : ' na'}">${fmt(s.e5)}</div>
+      </div>
+      <div class="p-item sel">
+        <div class="p-type">E10</div>
+        <div class="p-val${e10cls}">${fmt(s.e10)}</div>
+      </div>
+      <div class="p-item">
+        <div class="p-type">Diesel</div>
+        <div class="p-val${num(s.diesel) ? '' : ' na'}">${fmt(s.diesel)}</div>
+      </div>
+    </div>
   </div>`;
 }
 
@@ -309,9 +301,6 @@ function attach() {
     };
   }
 
-  document.querySelectorAll('[data-fuel]').forEach(el => {
-    el.onclick = () => { st.fuel = el.dataset.fuel; save(LS_FUEL, st.fuel); render(); };
-  });
   document.querySelectorAll('[data-rad]').forEach(el => {
     el.onclick = () => { st.radius = parseInt(el.dataset.rad); save(LS_RADIUS, st.radius); load(); };
   });
