@@ -58,6 +58,7 @@
     .card.overflow-visible .card-head { border-radius: var(--r) var(--r) 0 0; }
     .card.overflow-visible .card-body { border-radius: 0 0 var(--r) var(--r); }
     .card-head { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .card-head.no-border { border-bottom: none; }
     .card-title { font-size: .72rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
     .card-sub { font-size: .7rem; color: var(--text3); margin-top: 2px; }
     .card-body { padding: 10px 14px; }
@@ -300,7 +301,7 @@ function renderLocPrompt() {
   const noLoc = !st.ipLoc && !st.useGps;
   return `
   <div class="card overflow-visible">
-    <div class="card-head">
+    <div class="card-head${noLoc ? '' : ' no-border'}">
       <div>
         <div class="card-title">${noLoc ? '📍 Standort nicht erkannt' : 'Stadt / Standort'}</div>
         ${noLoc ? `<div class="card-sub">Aktiviere GPS oder suche deine Stadt</div>` : ''}
