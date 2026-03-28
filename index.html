@@ -280,7 +280,7 @@ function selectCity(i) {
   load();
 }
 function renderLocPrompt() {
-  if (st.ipLoc || st.useGps) return '';
+  const noLoc = !st.ipLoc && !st.useGps;
   const results = st.locSearch.results.map((c, i) => `
     <div class="loc-result" onclick="selectCity(${i})">
       <div>${c.name}</div>
@@ -288,16 +288,12 @@ function renderLocPrompt() {
     </div>`).join('');
   return `
   <div class="loc-prompt">
-    <div>
-      <div class="loc-title">📍 Standort nicht erkannt</div>
-      <div class="loc-sub">Aktiviere GPS oder suche deine Stadt</div>
+    ${noLoc ? `<div><div class="loc-title">📍 Standort nicht erkannt</div><div class="loc-sub">Aktiviere GPS oder suche deine Stadt</div></div>` : ''}
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}" style="flex:1">
+      <button class="loc-gps" onclick="toggleGps()" style="width:auto;padding:9px 12px;white-space:nowrap;">📍 GPS</button>
     </div>
-    <button class="loc-gps" onclick="toggleGps()">📍 GPS aktivieren</button>
-    <div class="loc-sep">oder</div>
-    <div>
-      <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}">
-      ${results ? `<div class="loc-results">${results}</div>` : ''}
-    </div>
+    ${results ? `<div class="loc-results">${results}</div>` : ''}
   </div>`;
 }
 
@@ -370,7 +366,7 @@ function renderMain() {
 
   <div class="list">
     ${renderLocPrompt()}
-    ${st.ipLoc || st.useGps ? renderTankTip() : ''}
+    ${renderTankTip()}
     ${cardsHtml}
   </div>`;
 }
