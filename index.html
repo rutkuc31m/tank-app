@@ -107,7 +107,8 @@
     .loc-head { display: flex; align-items: center; gap: 8px; }
     .loc-title { font-size: 14px; font-weight: 600; }
     .loc-sub { font-size: 12px; color: var(--text3); }
-    .loc-gps { width: 100%; padding: 9px; background: var(--accent-subtle); border: 1px solid color-mix(in srgb,var(--accent) 50%,transparent); border-radius: 8px; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; }
+    .loc-gps { width: 100%; padding: 9px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-size: 15px; cursor: pointer; transition: all .15s; }
+    .loc-gps.active { background: var(--accent-subtle); border-color: color-mix(in srgb,var(--accent) 50%,transparent); color: var(--accent); }
     .loc-sep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text3); }
     .loc-sep::before,.loc-sep::after { content:''; flex:1; height:1px; background:var(--border); }
     .loc-inp { width: 100%; padding: 9px 12px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; outline: none; transition: border-color .2s; }
@@ -291,7 +292,7 @@ function renderLocPrompt() {
     ${noLoc ? `<div><div class="loc-title">📍 Standort nicht erkannt</div><div class="loc-sub">Aktiviere GPS oder suche deine Stadt</div></div>` : ''}
     <div style="display:flex;gap:8px;align-items:center;">
       <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}" style="flex:1">
-      <button class="loc-gps" onclick="toggleGps()" style="width:auto;padding:9px 12px;white-space:nowrap;">📍 GPS</button>
+      <button class="loc-gps${st.useGps ? ' active' : ''}" onclick="toggleGps()" style="width:auto;padding:9px 12px;">📍</button>
     </div>
     ${results ? `<div class="loc-results">${results}</div>` : ''}
   </div>`;
@@ -340,7 +341,6 @@ function renderMain() {
       <div class="header-sub">${loc} Umkreis</div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn${st.useGps ? ' active' : ''}" id="gpsbtn" title="GPS">📍</button>
       <button class="icon-btn" id="sbtn" title="API-Key">⚙</button>
       <button class="icon-btn${st.loading ? ' spinning' : ''}" id="rbtn" title="Aktualisieren">↻</button>
     </div>
@@ -415,10 +415,8 @@ function attach() {
   }
   const rbtn = document.getElementById('rbtn');
   const sbtn = document.getElementById('sbtn');
-  const gpsbtn = document.getElementById('gpsbtn');
-  if (rbtn)   rbtn.onclick   = () => { if (!st.loading) load(); };
-  if (gpsbtn) gpsbtn.onclick = toggleGps;
-  if (sbtn)   sbtn.onclick   = () => {
+  if (rbtn) rbtn.onclick = () => { if (!st.loading) load(); };
+  if (sbtn) sbtn.onclick = () => {
     const v = prompt('Tankerkönig API-Key:', st.key);
     if (v !== null && v.trim()) { st.key = v.trim(); lsSet(LS.key, st.key); load(); }
   };
