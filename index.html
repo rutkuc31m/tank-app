@@ -265,12 +265,21 @@ function renderTankTip() {
 
 /* ── City Search ─────────────────────────────────── */
 async function searchCities(q) {
-  if (q.length < 2) { st.locSearch.results = []; render(); return; }
+  if (q.length < 2) { st.locSearch.results = []; renderLocResults(); return; }
   try {
     const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=de&countryCode=DE`).then(r => r.json());
     st.locSearch.results = r.results || [];
   } catch { st.locSearch.results = []; }
-  render();
+  renderLocResults();
+}
+function renderLocResults() {
+  const el = document.getElementById('loc-results');
+  if (!el) return;
+  el.innerHTML = st.locSearch.results.map((c, i) => `
+    <div class="loc-result" onclick="selectCity(${i})">
+      <div>${c.name}</div>
+      <div class="loc-result-sub">${[c.admin1, c.country].filter(Boolean).join(', ')}</div>
+    </div>`).join('');
 }
 function selectCity(i) {
   const c = st.locSearch.results[i];
@@ -282,11 +291,6 @@ function selectCity(i) {
 }
 function renderLocPrompt() {
   const noLoc = !st.ipLoc && !st.useGps;
-  const results = st.locSearch.results.map((c, i) => `
-    <div class="loc-result" onclick="selectCity(${i})">
-      <div>${c.name}</div>
-      <div class="loc-result-sub">${[c.admin1, c.country].filter(Boolean).join(', ')}</div>
-    </div>`).join('');
   return `
   <div class="loc-prompt">
     ${noLoc ? `<div><div class="loc-title">📍 Standort nicht erkannt</div><div class="loc-sub">Aktiviere GPS oder suche deine Stadt</div></div>` : ''}
@@ -294,7 +298,7 @@ function renderLocPrompt() {
       <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}" style="flex:1">
       <button class="loc-gps${st.useGps ? ' active' : ''}" onclick="toggleGps()" style="width:auto;padding:9px 12px;">📍</button>
     </div>
-    ${results ? `<div class="loc-results">${results}</div>` : ''}
+    <div id="loc-results"></div>
   </div>`;
 }
 
