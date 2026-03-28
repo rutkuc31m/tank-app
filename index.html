@@ -102,6 +102,22 @@
     .empty { text-align: center; padding: 50px 20px; color: var(--text2); font-size: 14px; }
     .empty-icon { font-size: 32px; margin-bottom: 12px; }
 
+    /* Location Prompt */
+    .loc-prompt { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .loc-head { display: flex; align-items: center; gap: 8px; }
+    .loc-title { font-size: 14px; font-weight: 600; }
+    .loc-sub { font-size: 12px; color: var(--text3); }
+    .loc-gps { width: 100%; padding: 9px; background: var(--accent-subtle); border: 1px solid color-mix(in srgb,var(--accent) 50%,transparent); border-radius: 8px; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; }
+    .loc-sep { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text3); }
+    .loc-sep::before,.loc-sep::after { content:''; flex:1; height:1px; background:var(--border); }
+    .loc-inp { width: 100%; padding: 9px 12px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; outline: none; transition: border-color .2s; }
+    .loc-inp:focus { border-color: var(--accent); }
+    .loc-results { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .loc-result { padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); color: var(--text); }
+    .loc-result:last-child { border-bottom: none; }
+    .loc-result:active { background: var(--card); }
+    .loc-result-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
     /* Tank-Tip */
     .tip-card { border-radius: var(--radius); padding: 11px 14px; display: flex; align-items: center; gap: 12px; border: 1px solid; }
     .tip-good { background: var(--accent-subtle); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
@@ -146,6 +162,7 @@ let st = {
   useGps:   lsGet(LS.gps) === '1',
   gpsPos:       null,
   ipLoc:        lsJson(LS.loc, null),
+  locSearch:    { query: '', results: [], timer: null },
   stations:     cached?.stations || [],
   updated:      cached?.ts ? new Date(cached.ts) : null,
   prevPrices:   {},
@@ -188,7 +205,7 @@ async function getIpLoc() {
       return { lat: st.ipLoc.lat, lng: st.ipLoc.lng };
     }
   } catch {}
-  return { lat: FALLBACK.lat, lng: FALLBACK.lng };
+  return null; // kein Standort → Prompt anzeigen
 }
 
 async function getPos() {
@@ -197,12 +214,12 @@ async function getPos() {
     return new Promise(resolve => {
       navigator.geolocation.getCurrentPosition(
         p => { st.gpsPos = { lat: p.coords.latitude, lng: p.coords.longitude }; resolve(st.gpsPos); },
-        () => getIpLoc().then(resolve),
+        async () => resolve((await getIpLoc()) || FALLBACK),
         { timeout: 8000, maximumAge: 60000 }
       );
     });
   }
-  return getIpLoc();
+  return (await getIpLoc()) || FALLBACK;
 }
 function toggleGps() { st.useGps = !st.useGps; st.gpsPos = null; lsSet(LS.gps, st.useGps ? '1' : '0'); load(); }
 
@@ -244,6 +261,45 @@ function renderTankTip() {
   return `<div class="tip-card ${t.cls}"><div class="tip-icon">${t.icon}</div><div class="tip-body"><div class="tip-text">${t.text}</div><div class="tip-sub">${t.sub}</div></div></div>`;
 }
 
+
+/* ── City Search ─────────────────────────────────── */
+async function searchCities(q) {
+  if (q.length < 2) { st.locSearch.results = []; render(); return; }
+  try {
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=de&countryCode=DE`).then(r => r.json());
+    st.locSearch.results = r.results || [];
+  } catch { st.locSearch.results = []; }
+  render();
+}
+function selectCity(i) {
+  const c = st.locSearch.results[i];
+  if (!c) return;
+  st.ipLoc = { lat: c.latitude, lng: c.longitude, city: c.name };
+  lsJsonSet(LS.loc, st.ipLoc);
+  st.locSearch = { query: '', results: [], timer: null };
+  load();
+}
+function renderLocPrompt() {
+  if (st.ipLoc || st.useGps) return '';
+  const results = st.locSearch.results.map((c, i) => `
+    <div class="loc-result" onclick="selectCity(${i})">
+      <div>${c.name}</div>
+      <div class="loc-result-sub">${[c.admin1, c.country].filter(Boolean).join(', ')}</div>
+    </div>`).join('');
+  return `
+  <div class="loc-prompt">
+    <div>
+      <div class="loc-title">📍 Standort nicht erkannt</div>
+      <div class="loc-sub">Aktiviere GPS oder suche deine Stadt</div>
+    </div>
+    <button class="loc-gps" onclick="toggleGps()">📍 GPS aktivieren</button>
+    <div class="loc-sep">oder</div>
+    <div>
+      <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}">
+      ${results ? `<div class="loc-results">${results}</div>` : ''}
+    </div>
+  </div>`;
+}
 
 /* ── Render ──────────────────────────────────────── */
 function render() {
@@ -313,7 +369,8 @@ function renderMain() {
   </div>
 
   <div class="list">
-    ${renderTankTip()}
+    ${renderLocPrompt()}
+    ${st.ipLoc || st.useGps ? renderTankTip() : ''}
     ${cardsHtml}
   </div>`;
 }
@@ -372,6 +429,15 @@ function attach() {
   document.querySelectorAll('[data-rad]').forEach(el => {
     el.onclick = () => { st.radius = parseInt(el.dataset.rad); lsSet(LS.radius, st.radius); load(); };
   });
+  const locInp = document.getElementById('loc-inp');
+  if (locInp) {
+    locInp.focus();
+    locInp.oninput = e => {
+      st.locSearch.query = e.target.value;
+      clearTimeout(st.locSearch.timer);
+      st.locSearch.timer = setTimeout(() => searchCities(st.locSearch.query), 300);
+    };
+  }
 }
 
 /* ── Pull-to-Refresh ─────────────────────────────── */
