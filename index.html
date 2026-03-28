@@ -101,6 +101,31 @@
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     .empty { text-align: center; padding: 50px 20px; color: var(--text2); font-size: 14px; }
     .empty-icon { font-size: 32px; margin-bottom: 12px; }
+
+    /* Tank-Tip */
+    .tip-card { border-radius: var(--radius); padding: 11px 14px; display: flex; align-items: center; gap: 12px; border: 1px solid; }
+    .tip-good { background: var(--accent-subtle); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+    .tip-ok   { background: color-mix(in srgb, #fbbf24 8%, var(--card)); border-color: color-mix(in srgb, #fbbf24 30%, transparent); }
+    .tip-warn { background: var(--card); border-color: var(--border); }
+    .tip-icon { font-size: 18px; flex-shrink: 0; }
+    .tip-body { display: flex; flex-direction: column; gap: 2px; }
+    .tip-text { font-size: 13px; font-weight: 600; }
+    .tip-good .tip-text { color: var(--accent); }
+    .tip-ok   .tip-text { color: #fbbf24; }
+    .tip-warn .tip-text { color: var(--text2); }
+    .tip-sub  { font-size: 11px; color: var(--text3); }
+
+    /* Letzter Tankstop */
+    .last-tank { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .lt-left { display: flex; flex-direction: column; gap: 2px; }
+    .lt-label { font-size: 11px; color: var(--text3); }
+    .lt-info  { font-size: 13px; color: var(--text); font-weight: 500; }
+    .lt-clear { font-size: 18px; color: var(--text3); background: none; border: none; cursor: pointer; padding: 0; line-height: 1; }
+
+    /* Hier-getankt Button */
+    .tank-btn { margin-top: 2px; width: 100%; background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text3); font-size: 12px; padding: 5px 10px; cursor: pointer; transition: all 0.15s; }
+    .tank-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tank-btn.tanked-here { border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent); background: var(--accent-subtle); }
   </style>
 </head>
 <body>
@@ -108,7 +133,7 @@
 <div id="app"></div>
 <script>
 /* ── Keys ────────────────────────────────────────── */
-const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', favs:'t_favs', gps:'t_gps' };
+const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', favs:'t_favs', gps:'t_gps', lastTank:'t_last_tank' };
 const HANNOVER = { lat: 52.3759, lng: 9.7320 };
 const RADII    = [3, 5, 10];
 const FUEL     = 'e10';
@@ -133,6 +158,8 @@ let st = {
   gpsPos:       null,
   stations:     cached?.stations || [],
   updated:      cached?.ts ? new Date(cached.ts) : null,
+  prevPrices:   {},
+  lastTank:     lsJson(LS.lastTank, null),
   loading:      false,
   error:        null,
 };
@@ -186,6 +213,10 @@ async function load() {
     const url  = `https://creativecommons.tankerkoenig.de/json/list.php?lat=${pos.lat}&lng=${pos.lng}&rad=${st.radius}&sort=dist&type=all&apikey=${st.key}`;
     const data = await fetch(url).then(r => r.json());
     if (!data.ok) throw new Error(data.message || 'API-Fehler');
+    // save previous prices for trend arrows
+    const prev = {};
+    st.stations.forEach(s => { if (num(s[FUEL])) prev[s.id] = s[FUEL]; });
+    st.prevPrices = prev;
     st.stations = data.stations || [];
     st.updated  = new Date();
     lsJsonSet(LS.cache, { stations: st.stations, ts: st.updated.toISOString() });
@@ -193,6 +224,56 @@ async function load() {
   st.loading = false;
   render();
 }
+
+/* ── Tank Tip ────────────────────────────────────── */
+function tankTip() {
+  const h = new Date().getHours();
+  const d = new Date().getDay(); // 0=So, 6=Sa
+  if (d === 0 || d === 6)     return { cls:'tip-warn', icon:'⚠️', text:'Wochenende — tendenziell teurer',  sub:'Werktags 18–20 Uhr meist günstiger' };
+  if (h >= 18 && h < 21)      return { cls:'tip-good', icon:'✅', text:'Jetzt tanken!',                    sub:'Mo–Mi abends meist am günstigsten' };
+  if (h >= 6  && h < 8)       return { cls:'tip-good', icon:'✅', text:'Gute Zeit zum Tanken',             sub:'Früh morgens oft günstig' };
+  if (h >= 10 && h < 13)      return { cls:'tip-warn', icon:'⚠️', text:'Preise steigen oft gerade',        sub:'Wenn möglich, bis 18 Uhr warten' };
+  if (h >= 16 && h < 18)      return { cls:'tip-warn', icon:'⚠️', text:'Preisanstieg möglich',             sub:'In 1–2 Std. wieder günstiger' };
+  return                               { cls:'tip-ok',  icon:'🕐', text:'Geht so',                         sub:'Abends 18–20 Uhr meist günstiger' };
+}
+function renderTankTip() {
+  const t = tankTip();
+  return `<div class="tip-card ${t.cls}"><div class="tip-icon">${t.icon}</div><div class="tip-body"><div class="tip-text">${t.text}</div><div class="tip-sub">${t.sub}</div></div></div>`;
+}
+
+/* ── Last Tank ───────────────────────────────────── */
+function fmtDate(iso) {
+  const [y,m,d] = iso.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('de-DE', { weekday:'short', day:'numeric', month:'numeric' });
+}
+function tankHere(id, e) {
+  e.stopPropagation();
+  const s = st.stations.find(x => x.id === id);
+  if (!s) return;
+  const p = num(s[FUEL]);
+  const today = new Date().toISOString().slice(0,10);
+  // toggle: if already tanked here today, clear
+  if (st.lastTank?.id === id && st.lastTank?.date === today) {
+    st.lastTank = null; lsJsonSet(LS.lastTank, null);
+  } else {
+    st.lastTank = { id, date: today, price: p, name: s.name || s.brand || 'Tankstelle' };
+    lsJsonSet(LS.lastTank, st.lastTank);
+  }
+  render();
+}
+function renderLastTank() {
+  if (!st.lastTank) return '';
+  const lt = st.lastTank;
+  const priceStr = lt.price ? lt.price.toFixed(3).replace('.',',') + '\u202f€' : '–';
+  return `<div class="last-tank">
+    <div class="lt-left">
+      <div class="lt-label">Zuletzt getankt</div>
+      <div class="lt-info">${fmtDate(lt.date)} · ${priceStr} · ${lt.name}</div>
+    </div>
+    <button class="lt-clear" onclick="clearLastTank(event)" title="Löschen">×</button>
+  </div>`;
+}
+function clearLastTank(e) { e.stopPropagation(); st.lastTank = null; lsJsonSet(LS.lastTank, null); render(); }
 
 /* ── Render ──────────────────────────────────────── */
 function render() {
@@ -261,6 +342,8 @@ function renderMain() {
   </div>
 
   <div class="list">
+    ${renderTankTip()}
+    ${renderLastTank()}
     ${cardsHtml}
   </div>`;
 }
@@ -294,7 +377,11 @@ function renderCard(s, minPrice) {
     ${tags ? `<div class="tags-row">${tags}</div>` : ''}
     <div class="price-row">
       <div class="price-main${isMin ? ' accent' : ''}">${fmt(s[FUEL])}</div>
+      ${(()=>{ const prev = st.prevPrices[s.id]; if (!prev || !p || Math.abs(p-prev)<0.001) return ''; return p<prev ? `<span class="trend trend-down">↓</span>` : `<span class="trend trend-up">↑</span>`; })()}
     </div>
+    <button class="tank-btn${st.lastTank?.id===s.id?' tanked-here':''}" onclick="tankHere('${s.id}',event)">
+      ${st.lastTank?.id===s.id ? '✓ Hier zuletzt getankt' : '⛽ Hier getankt'}
+    </button>
   </div>`;
 }
 
