@@ -37,21 +37,11 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Controls */
-    .controls { max-width: 500px; margin: 12px auto 0; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
-    .opts-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .controls { max-width: 500px; margin: 12px auto 0; padding: 0 16px; }
     .opt-group { display: flex; align-items: center; gap: 6px; }
     .opt-label { font-size: 12px; color: var(--text3); white-space: nowrap; }
     .opt-btn { padding: 5px 10px; border-radius: 7px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font-size: 13px; cursor: pointer; transition: all 0.15s; }
     .opt-btn.active { background: var(--card2); color: var(--text); border-color: var(--text3); }
-
-    /* Input rows */
-    .ctrl-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .ctrl-group { display: flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; }
-    .ctrl-group label { font-size: 12px; color: var(--text3); white-space: nowrap; }
-    .ctrl-inp { background: none; border: none; color: var(--text); font-size: 13px; font-weight: 600; width: 52px; outline: none; text-align: right; }
-    .ctrl-inp::-webkit-inner-spin-button { opacity: 0.4; }
-    .ctrl-unit { font-size: 12px; color: var(--text3); }
-    .alarm-on .ctrl-group:last-child { border-color: var(--green); }
 
     /* Statusbar */
     .statusbar { max-width: 500px; margin: 8px auto 0; padding: 0 16px; display: flex; align-items: center; gap: 8px; }
@@ -60,57 +50,53 @@
     .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
     @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
 
-    /* Alert banner */
-    .alert-banner { max-width: 500px; margin: 6px auto 0; padding: 0 16px; }
-    .alert-inner { background: color-mix(in srgb, var(--green) 10%, var(--card)); border: 1px solid color-mix(in srgb, var(--green) 40%, transparent); border-radius: 8px; padding: 7px 12px; font-size: 12px; color: var(--green); font-weight: 500; }
-
     /* List */
     .list { max-width: 500px; margin: 10px auto 80px; padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
-
-    /* Divider between favs and rest */
     .list-divider { font-size: 11px; color: var(--text3); padding: 4px 2px; display: flex; align-items: center; gap: 8px; }
     .list-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    /* Card */
+    /* Weekly chart card */
+    .week-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 14px 12px; }
+    .week-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+    .week-title { font-size: 13px; font-weight: 600; color: var(--text2); }
+    .week-trend { font-size: 12px; }
+    .week-trend.up   { color: var(--red); }
+    .week-trend.down { color: var(--green); }
+    .week-trend.eq   { color: var(--text3); }
+    .week-nodata { font-size: 12px; color: var(--text3); padding: 16px 0 8px; text-align: center; }
+
+    /* Station card */
     .s-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: border-color 0.2s; }
     .s-card:active { opacity: 0.85; }
     .s-card.cheapest { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
-    .s-card.fav-card { border-color: color-mix(in srgb, var(--yellow) 40%, transparent); }
-    .s-card.alert-hit { border-color: color-mix(in srgb, var(--green) 50%, transparent); }
+    .s-card.fav-card  { border-color: color-mix(in srgb, var(--yellow) 40%, transparent); }
 
     .s-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
     .s-info { flex: 1; min-width: 0; }
     .s-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .s-brand { font-size: 12px; color: var(--text3); margin-top: 1px; }
-    .s-addr { font-size: 12px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .s-addr  { font-size: 12px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .s-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
     .fav-btn { background: none; border: none; font-size: 17px; cursor: pointer; padding: 0; line-height: 1; transition: transform 0.15s; color: var(--text3); }
     .fav-btn:hover { transform: scale(1.25); }
     .fav-btn.on { color: var(--yellow); }
     .dist-badge { font-size: 12px; color: var(--text3); }
     .open-pill { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
-    .open-pill.open { background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--accent); }
+    .open-pill.open   { background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--accent); }
     .open-pill.closed { background: color-mix(in srgb, var(--border) 40%, var(--card)); color: var(--text3); }
 
-    /* Tags row */
     .tags-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .tag { font-size: 11px; font-weight: 600; }
     .tag-cheapest { color: var(--accent); }
-    .tag-alert { color: var(--green); }
-    .tag-fav { color: var(--yellow); }
+    .tag-fav      { color: var(--yellow); }
 
-    /* Price row */
-    .price-row { display: flex; align-items: center; gap: 12px; }
+    .price-row { display: flex; align-items: center; gap: 10px; }
     .price-main { font-size: 30px; font-weight: 800; line-height: 1; color: var(--text); }
     .price-main.accent { color: var(--accent); }
-    .price-main.green { color: var(--green); }
-    .trend { font-size: 18px; font-weight: 700; }
-    .trend-up { color: var(--red); }
+    .trend { font-size: 17px; font-weight: 700; }
+    .trend-up   { color: var(--red); }
     .trend-down { color: var(--green); }
-    .trend-eq { color: var(--text3); }
-    .price-cost { margin-left: auto; text-align: right; }
-    .price-cost-val { font-size: 15px; font-weight: 700; color: var(--text2); }
-    .price-cost-label { font-size: 11px; color: var(--text3); margin-top: 1px; }
+    .trend-eq   { color: var(--text3); }
 
     /* Setup */
     .setup { max-width: 400px; margin: 80px auto; padding: 0 24px; text-align: center; }
@@ -121,11 +107,8 @@
     .key-inp:focus { border-color: var(--accent); }
     .key-btn { margin-top: 10px; width: 100%; padding: 12px; background: var(--accent-subtle); border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: 15px; font-weight: 600; cursor: pointer; }
 
-    /* Skeletons */
     .skel { background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius); height: 130px; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-    /* Empty */
     .empty { text-align: center; padding: 50px 20px; color: var(--text2); font-size: 14px; }
     .empty-icon { font-size: 32px; margin-bottom: 12px; }
   </style>
@@ -134,88 +117,69 @@
 <div id="ptr"><span id="ptr-icon">↓ Ziehen</span></div>
 <div id="app"></div>
 <script>
-/* ── LocalStorage Keys ──────────────────────────── */
-const LS = {
-  key:    't_key',
-  radius: 't_radius',
-  cache:  't_cache',
-  favs:   't_favs',
-  hist:   't_hist',
-  alert:  't_alert',
-  liters: 't_liters',
-  gps:    't_gps',
-};
-
+/* ── Keys ────────────────────────────────────────── */
+const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', favs:'t_favs', hist:'t_hist', gps:'t_gps' };
 const HANNOVER = { lat: 52.3759, lng: 9.7320 };
 const RADII    = [3, 5, 10];
 const FUEL     = 'e10';
+const DAY_LABELS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
 
-/* ── Helpers ────────────────────────────────────── */
-function lsGet(k, def = null) {
-  try { const v = localStorage.getItem(k); return v !== null ? v : def; } catch { return def; }
-}
-function lsSet(k, v) { try { localStorage.setItem(k, String(v)); } catch {} }
-function lsJson(k, def) { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } }
-function lsJsonSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+/* ── Helpers ─────────────────────────────────────── */
+function lsGet(k, d='')   { try { return localStorage.getItem(k) ?? d; } catch { return d; } }
+function lsSet(k, v)      { try { localStorage.setItem(k, String(v)); } catch {} }
+function lsJson(k, d)     { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }
+function lsJsonSet(k, v)  { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 
-function num(p) { return p && p > 0 ? p : null; }
-function fmt(p) { if (!num(p)) return '–'; return p.toFixed(3).replace('.', ',') + '\u202f€'; }
-function fmtCost(price, liters) { return (price * liters).toFixed(2).replace('.', ',') + '\u202f€'; }
-function fmtTime(d) { return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
-function today() { return new Date().toISOString().slice(0, 10); }
+function num(p)   { return p && p > 0 ? p : null; }
+function fmt(p)   { return num(p) ? p.toFixed(3).replace('.', ',') + '\u202f€' : '–'; }
+function fmtTime(d) { return d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }); }
+function today()  { return new Date().toISOString().slice(0, 10); }
+function dayLabel(str) { const [y,m,d] = str.split('-').map(Number); return DAY_LABELS[new Date(y,m-1,d).getDay()]; }
 
-/* ── Price History ──────────────────────────────── */
+/* ── Price History ───────────────────────────────── */
 function getHist() { return lsJson(LS.hist, {}); }
 
 function saveHist(stations) {
-  const hist = getHist();
-  hist[today()] = {};
-  stations.forEach(s => { if (num(s[FUEL])) hist[today()][s.id] = s[FUEL]; });
+  const hist = getHist(), t = today();
+  hist[t] = {};
+  stations.forEach(s => { if (num(s[FUEL])) hist[t][s.id] = s[FUEL]; });
   const keys = Object.keys(hist).sort();
   while (keys.length > 7) delete hist[keys.shift()];
   lsJsonSet(LS.hist, hist);
 }
 
-function getTrend(stationId, currentPrice) {
-  const hist = getHist();
-  const t = today();
+function getTrend(id, price) {
+  const hist = getHist(), t = today();
   const days = Object.keys(hist).filter(d => d < t).sort();
-  if (!days.length || !currentPrice) return null;
-  const prev = hist[days[days.length - 1]]?.[stationId];
+  if (!days.length || !price) return null;
+  const prev = hist[days[days.length-1]]?.[id];
   if (!prev) return null;
-  const diff = currentPrice - prev;
-  if (Math.abs(diff) < 0.002) return 'eq';
-  return diff > 0 ? 'up' : 'down';
+  const d = price - prev;
+  return Math.abs(d) < 0.002 ? 'eq' : d > 0 ? 'up' : 'down';
 }
 
-/* ── State ──────────────────────────────────────── */
-let cached = lsJson(LS.cache, null);
-
+/* ── State ───────────────────────────────────────── */
+const cached = lsJson(LS.cache, null);
 let st = {
-  key:     lsGet(LS.key, ''),
-  radius:  parseInt(lsGet(LS.radius, '10')) || 10,
-  favs:    lsJson(LS.favs, []),
-  alert:   parseFloat(lsGet(LS.alert, '')) || null,
-  liters:  parseFloat(lsGet(LS.liters, '45')) || 45,
-  useGps:  lsGet(LS.gps) === '1',
-  gpsPos:  null,
+  key:      lsGet(LS.key),
+  radius:   parseInt(lsGet(LS.radius, '10')) || 10,
+  favs:     lsJson(LS.favs, []),
+  useGps:   lsGet(LS.gps) === '1',
+  gpsPos:   null,
   stations: cached?.stations || [],
   updated:  cached?.ts ? new Date(cached.ts) : null,
   loading:  false,
   error:    null,
 };
 
-/* ── Sorting ─────────────────────────────────────── */
-function sorted() {
+/* ── Sort + Cheapest ─────────────────────────────── */
+function sortedStations() {
   const list = [...st.stations].sort((a, b) => (num(a[FUEL]) || 9999) - (num(b[FUEL]) || 9999));
-  const favs = list.filter(s => st.favs.includes(s.id));
-  const rest = list.filter(s => !st.favs.includes(s.id));
-  return { favs, rest, all: [...favs, ...rest] };
+  return { favs: list.filter(s => st.favs.includes(s.id)), rest: list.filter(s => !st.favs.includes(s.id)), all: list };
 }
-
 function cheapestOf(list) {
-  const prices = list.filter(s => s.isOpen).map(s => num(s[FUEL])).filter(Boolean);
-  return prices.length ? Math.min(...prices) : null;
+  const ps = list.filter(s => s.isOpen).map(s => num(s[FUEL])).filter(Boolean);
+  return ps.length ? Math.min(...ps) : null;
 }
 
 /* ── Favorites ───────────────────────────────────── */
@@ -227,50 +191,115 @@ function toggleFav(id, e) {
   render();
 }
 
-/* ── GPS ────────────────────────────────────────── */
+/* ── GPS ─────────────────────────────────────────── */
 async function getPos() {
   if (!st.useGps) return HANNOVER;
   if (st.gpsPos) return st.gpsPos;
   return new Promise(resolve => {
     navigator.geolocation.getCurrentPosition(
       p => { st.gpsPos = { lat: p.coords.latitude, lng: p.coords.longitude }; resolve(st.gpsPos); },
-      ()  => resolve(HANNOVER),
+      () => resolve(HANNOVER),
       { timeout: 8000, maximumAge: 60000 }
     );
   });
 }
+function toggleGps() { st.useGps = !st.useGps; st.gpsPos = null; lsSet(LS.gps, st.useGps ? '1' : '0'); load(); }
 
-function toggleGps() {
-  st.useGps = !st.useGps;
-  st.gpsPos = null;
-  lsSet(LS.gps, st.useGps ? '1' : '0');
-  load();
-}
-
-/* ── Load ───────────────────────────────────────── */
+/* ── Load ────────────────────────────────────────── */
 async function load() {
   if (!st.key) return;
   st.loading = true; st.error = null;
   render();
-
   try {
-    const pos = await getPos();
-    const url = `https://creativecommons.tankerkoenig.de/json/list.php?lat=${pos.lat}&lng=${pos.lng}&rad=${st.radius}&sort=dist&type=all&apikey=${st.key}`;
-    const res  = await fetch(url);
-    const data = await res.json();
+    const pos  = await getPos();
+    const url  = `https://creativecommons.tankerkoenig.de/json/list.php?lat=${pos.lat}&lng=${pos.lng}&rad=${st.radius}&sort=dist&type=all&apikey=${st.key}`;
+    const data = await (await fetch(url)).json();
     if (!data.ok) throw new Error(data.message || 'API-Fehler');
     st.stations = data.stations || [];
     st.updated  = new Date();
     lsJsonSet(LS.cache, { stations: st.stations, ts: st.updated.toISOString() });
     saveHist(st.stations);
-  } catch(e) {
-    st.error = e.message;
-  }
+  } catch(e) { st.error = e.message; }
   st.loading = false;
   render();
 }
 
-/* ── Render ─────────────────────────────────────── */
+/* ── Weekly Chart ────────────────────────────────── */
+function renderWeeklyChart() {
+  const hist = getHist();
+  const t    = today();
+  // all stored days, last 7, sorted
+  const days = Object.keys(hist).sort().slice(-7);
+
+  // compute daily cheapest price
+  const pts = days.map(d => {
+    const prices = Object.values(hist[d]).filter(p => p > 0);
+    return { d, label: dayLabel(d), isToday: d === t, min: prices.length ? Math.min(...prices) : null };
+  }).filter(x => x.min);
+
+  const noData = pts.length < 2;
+
+  // overall trend line
+  let trendHtml = '';
+  if (pts.length >= 2) {
+    const first = pts[0], last = pts[pts.length - 1];
+    const diff  = last.min - first.min;
+    const absDiff = Math.abs(diff).toFixed(3).replace('.', ',');
+    if (Math.abs(diff) < 0.002) {
+      trendHtml = `<span class="week-trend eq">→ Unverändert</span>`;
+    } else if (diff > 0) {
+      trendHtml = `<span class="week-trend up">↑ +${absDiff} € seit ${first.label}</span>`;
+    } else {
+      trendHtml = `<span class="week-trend down">↓ −${absDiff} € seit ${first.label}</span>`;
+    }
+  }
+
+  // SVG bars
+  let svgContent = '';
+  if (!noData) {
+    const W = 460, BAR_H = 80, LABEL_H = 38, H = BAR_H + LABEL_H;
+    const n    = pts.length;
+    const colW = W / n;
+    const barW = Math.min(colW * 0.52, 44);
+    const minP = Math.min(...pts.map(x => x.min));
+    const maxP = Math.max(...pts.map(x => x.min));
+    const range = maxP - minP || 0.001;
+
+    const bars = pts.map((x, i) => {
+      const cx    = colW * i + colW / 2;
+      // higher price = taller bar (standard chart)
+      const ratio = (x.min - minP) / range;
+      const bh    = 18 + ratio * (BAR_H - 22);
+      const by    = BAR_H - bh;
+      const isCheap = x.min === minP;
+      const fill  = x.isToday ? '#4a7a93' : isCheap ? '#bae6fd' : '#3f3f46';
+      const stroke = x.isToday ? '#bae6fd' : 'none';
+      const labelCol = x.isToday ? '#fafafa' : isCheap ? '#bae6fd' : '#71717a';
+      const priceStr = x.min.toFixed(3).replace('.', ',');
+      const fw    = x.isToday ? '700' : '400';
+
+      return `
+        <rect x="${(cx - barW/2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="5" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+        <text x="${cx.toFixed(1)}" y="${(BAR_H + 16).toFixed(1)}" text-anchor="middle" font-size="11" fill="${labelCol}" font-weight="${fw}" font-family="system-ui,sans-serif">${x.label}</text>
+        <text x="${cx.toFixed(1)}" y="${(BAR_H + 32).toFixed(1)}" text-anchor="middle" font-size="10" fill="${labelCol}" font-family="system-ui,sans-serif">${priceStr}</text>`;
+    }).join('');
+
+    svgContent = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible;">${bars}</svg>`;
+  }
+
+  return `
+  <div class="week-card">
+    <div class="week-header">
+      <span class="week-title">Wochenentwicklung E10</span>
+      ${trendHtml}
+    </div>
+    ${noData
+      ? `<div class="week-nodata">Noch nicht genug Daten — ab morgen sichtbar</div>`
+      : svgContent}
+  </div>`;
+}
+
+/* ── Render ──────────────────────────────────────── */
 function render() {
   document.getElementById('app').innerHTML = st.key ? renderMain() : renderSetup();
   attach();
@@ -281,34 +310,28 @@ function renderSetup() {
   <div class="setup">
     <div class="setup-icon">⛽</div>
     <h2>Tank App</h2>
-    <p>Gib deinen Tankerkönig API-Key ein um E10-Preise in Hannover zu sehen.</p>
+    <p>Gib deinen Tankerkönig API-Key ein um E10-Preise zu sehen.</p>
     <input class="key-inp" id="kinp" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
     <button class="key-btn" id="ksave">Speichern &amp; starten</button>
   </div>`;
 }
 
 function renderMain() {
-  const { favs, rest, all } = sorted();
-  const minPrice  = cheapestOf(all);
-  const hasCache  = st.stations.length > 0;
-  const alertHits = st.alert ? all.filter(s => num(s[FUEL]) && s[FUEL] < st.alert && s.isOpen).length : 0;
-  const loc       = st.useGps && st.gpsPos
-    ? `GPS · ${st.radius}\u202fkm`
-    : `Hannover · ${st.radius}\u202fkm`;
+  const { favs, rest, all } = sortedStations();
+  const minPrice = cheapestOf(all);
+  const hasCache = st.stations.length > 0;
+  const loc = st.useGps && st.gpsPos ? `GPS · ${st.radius}\u202fkm` : `Hannover · ${st.radius}\u202fkm`;
 
-  const renderCards = (list) => list.map(s => renderCard(s, minPrice)).join('');
-
+  const mkCards = list => list.map(s => renderCard(s, minPrice)).join('');
   let cardsHtml;
   if (st.loading && !hasCache) {
     cardsHtml = Array(5).fill(0).map(() => `<div class="skel"></div>`).join('');
   } else if (!all.length) {
     cardsHtml = `<div class="empty"><div class="empty-icon">🔍</div>Keine Stationen gefunden</div>`;
   } else if (favs.length && rest.length) {
-    cardsHtml = renderCards(favs)
-      + `<div class="list-divider">Alle Stationen</div>`
-      + renderCards(rest);
+    cardsHtml = mkCards(favs) + `<div class="list-divider">Alle Stationen</div>` + mkCards(rest);
   } else {
-    cardsHtml = renderCards(all);
+    cardsHtml = mkCards(all);
   }
 
   return `
@@ -325,23 +348,9 @@ function renderMain() {
   </header>
 
   <div class="controls">
-    <div class="opts-row">
-      <div class="opt-group">
-        <span class="opt-label">Umkreis:</span>
-        ${RADII.map(r => `<button class="opt-btn${st.radius===r?' active':''}" data-rad="${r}">${r}&thinsp;km</button>`).join('')}
-      </div>
-    </div>
-    <div class="ctrl-row">
-      <div class="ctrl-group">
-        <label>⛽ Liter</label>
-        <input class="ctrl-inp" id="liters-inp" type="number" min="1" max="200" step="1" value="${st.liters}">
-        <span class="ctrl-unit">L</span>
-      </div>
-      <div class="ctrl-group">
-        <label>🔔 Alarm unter</label>
-        <input class="ctrl-inp" id="alert-inp" type="number" min="1" max="3" step="0.01" value="${st.alert || ''}" placeholder="–">
-        <span class="ctrl-unit">€</span>
-      </div>
+    <div class="opt-group">
+      <span class="opt-label">Umkreis:</span>
+      ${RADII.map(r => `<button class="opt-btn${st.radius===r?' active':''}" data-rad="${r}">${r}&thinsp;km</button>`).join('')}
     </div>
   </div>
 
@@ -352,48 +361,32 @@ function renderMain() {
         ? 'Fehler: ' + st.error + (st.updated ? ' · ' + fmtTime(st.updated) : '')
         : st.updated
           ? (st.loading ? 'Aktualisiere…' : 'Stand: ' + fmtTime(st.updated)) + ' · ' + all.length + ' Stationen'
-          : st.loading ? 'GPS & Daten werden geladen…' : ''}
+          : st.loading ? 'Lade…' : ''}
     </div>
   </div>
 
-  ${alertHits > 0 ? `
-  <div class="alert-banner">
-    <div class="alert-inner">✓ ${alertHits} Station${alertHits > 1 ? 'en' : ''} unter ${String(st.alert).replace('.', ',')} €</div>
-  </div>` : ''}
-
-  <div class="list">${cardsHtml}</div>`;
+  <div class="list">
+    ${renderWeeklyChart()}
+    ${cardsHtml}
+  </div>`;
 }
 
 function renderCard(s, minPrice) {
-  const p      = num(s[FUEL]);
-  const isMin  = minPrice !== null && p === minPrice;
-  const isFav  = st.favs.includes(s.id);
-  const isAlert = st.alert && p && p < st.alert && s.isOpen;
-  const trend  = getTrend(s.id, p);
+  const p     = num(s[FUEL]);
+  const isMin = minPrice !== null && p === minPrice;
+  const isFav = st.favs.includes(s.id);
+  const trend = getTrend(s.id, p);
 
   const tags = [
-    isMin  ? `<span class="tag tag-cheapest">★ Günstigste E10</span>` : '',
-    isAlert ? `<span class="tag tag-alert">✓ Unter ${String(st.alert).replace('.', ',')} €</span>` : '',
-    isFav  ? `<span class="tag tag-fav">♥ Favorit</span>` : '',
+    isMin ? `<span class="tag tag-cheapest">★ Günstigste E10</span>` : '',
+    isFav ? `<span class="tag tag-fav">♥ Favorit</span>` : '',
   ].filter(Boolean).join('');
 
-  const trendHtml = trend === 'up'
-    ? `<span class="trend trend-up" title="Teurer als gestern">↑</span>`
-    : trend === 'down'
-    ? `<span class="trend trend-down" title="Günstiger als gestern">↓</span>`
-    : trend === 'eq'
-    ? `<span class="trend trend-eq" title="Gleich wie gestern">→</span>`
-    : '';
+  const trendHtml = trend === 'up'   ? `<span class="trend trend-up" title="Teurer als gestern">↑</span>`
+                  : trend === 'down' ? `<span class="trend trend-down" title="Günstiger als gestern">↓</span>`
+                  : trend === 'eq'   ? `<span class="trend trend-eq" title="Gleich wie gestern">→</span>` : '';
 
-  const priceClass = isAlert ? 'green' : isMin ? 'accent' : '';
-
-  const costHtml = p ? `
-    <div class="price-cost">
-      <div class="price-cost-val">${fmtCost(p, st.liters)}</div>
-      <div class="price-cost-label">${st.liters}&thinsp;L</div>
-    </div>` : '';
-
-  const cls = ['s-card', isMin ? 'cheapest' : '', isFav ? 'fav-card' : '', isAlert ? 'alert-hit' : ''].filter(Boolean).join(' ');
+  const cls = ['s-card', isMin ? 'cheapest' : '', isFav ? 'fav-card' : ''].filter(Boolean).join(' ');
 
   return `
   <div class="${cls}" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}','_blank')">
@@ -404,102 +397,59 @@ function renderCard(s, minPrice) {
         <div class="s-addr">${[s.street, s.place].filter(Boolean).join(', ')}</div>
       </div>
       <div class="s-right">
-        <button class="fav-btn${isFav ? ' on' : ''}" onclick="toggleFav('${s.id}',event)" title="${isFav ? 'Favorit entfernen' : 'Als Favorit speichern'}">${isFav ? '♥' : '♡'}</button>
+        <button class="fav-btn${isFav?' on':''}" onclick="toggleFav('${s.id}',event)">${isFav ? '♥' : '♡'}</button>
         <span class="dist-badge">${s.dist ? s.dist.toFixed(1)+'\u202fkm' : ''}</span>
-        <span class="open-pill ${s.isOpen ? 'open' : 'closed'}">${s.isOpen ? 'Offen' : 'Zu'}</span>
+        <span class="open-pill ${s.isOpen?'open':'closed'}">${s.isOpen ? 'Offen' : 'Zu'}</span>
       </div>
     </div>
     ${tags ? `<div class="tags-row">${tags}</div>` : ''}
     <div class="price-row">
-      <div class="price-main${priceClass ? ' '+priceClass : ''}">${fmt(s[FUEL])}</div>
+      <div class="price-main${isMin ? ' accent' : ''}">${fmt(s[FUEL])}</div>
       ${trendHtml}
-      ${costHtml}
     </div>
   </div>`;
 }
 
-/* ── Attach Events ───────────────────────────────── */
+/* ── Attach ──────────────────────────────────────── */
 function attach() {
-  // Setup
   const ksave = document.getElementById('ksave');
   const kinp  = document.getElementById('kinp');
   if (ksave) {
     ksave.onclick = () => { const v = kinp.value.trim(); if (v) { st.key = v; lsSet(LS.key, v); load(); } };
     kinp.onkeydown = e => { if (e.key === 'Enter') ksave.click(); };
   }
-
-  // Main buttons
-  const rbtn   = document.getElementById('rbtn');
-  const sbtn   = document.getElementById('sbtn');
+  const rbtn = document.getElementById('rbtn');
+  const sbtn = document.getElementById('sbtn');
   const gpsbtn = document.getElementById('gpsbtn');
   if (rbtn)   rbtn.onclick   = () => { if (!st.loading) load(); };
-  if (gpsbtn) gpsbtn.onclick = () => toggleGps();
+  if (gpsbtn) gpsbtn.onclick = toggleGps;
   if (sbtn)   sbtn.onclick   = () => {
     const v = prompt('Tankerkönig API-Key:', st.key);
     if (v !== null && v.trim()) { st.key = v.trim(); lsSet(LS.key, st.key); load(); }
   };
-
-  // Radius
   document.querySelectorAll('[data-rad]').forEach(el => {
     el.onclick = () => { st.radius = parseInt(el.dataset.rad); lsSet(LS.radius, st.radius); load(); };
   });
-
-  // Liter input
-  const litersInp = document.getElementById('liters-inp');
-  if (litersInp) {
-    litersInp.onchange = () => {
-      const v = parseFloat(litersInp.value);
-      if (v > 0) { st.liters = v; lsSet(LS.liters, v); render(); }
-    };
-  }
-
-  // Alert input
-  const alertInp = document.getElementById('alert-inp');
-  if (alertInp) {
-    alertInp.onchange = () => {
-      const v = parseFloat(alertInp.value);
-      st.alert = v > 0 ? v : null;
-      lsSet(LS.alert, st.alert || '');
-      render();
-    };
-  }
 }
 
 /* ── Pull-to-Refresh ─────────────────────────────── */
-const ptr_el   = document.getElementById('ptr');
+const ptr_el = document.getElementById('ptr');
 const ptr_icon = document.getElementById('ptr-icon');
 let ptr_startY = 0, ptr_pulling = false;
-
-document.addEventListener('touchstart', e => {
-  ptr_startY = window.scrollY < 5 ? e.touches[0].clientY : 0;
-}, { passive: true });
-
+document.addEventListener('touchstart', e => { ptr_startY = window.scrollY < 5 ? e.touches[0].clientY : 0; }, { passive: true });
 document.addEventListener('touchmove', e => {
   if (!ptr_startY || st.loading) return;
   const dy = e.touches[0].clientY - ptr_startY;
-  if (dy > 4) {
-    ptr_pulling = true;
-    const h = Math.min(dy * 0.75, 52);
-    ptr_el.style.height = h + 'px';
-    ptr_icon.textContent = h >= 28 ? '↺ Loslassen' : '↓ Ziehen';
-  }
+  if (dy > 4) { ptr_pulling = true; const h = Math.min(dy * 0.75, 52); ptr_el.style.height = h + 'px'; ptr_icon.textContent = h >= 28 ? '↺ Loslassen' : '↓ Ziehen'; }
 }, { passive: true });
-
 document.addEventListener('touchend', () => {
-  if (ptr_pulling && parseInt(ptr_el.style.height) >= 28) {
-    ptr_el.style.height = '42px';
-    ptr_icon.textContent = '⟳ Aktualisiere…';
-    load().finally(() => { ptr_el.style.height = '0'; });
-  } else {
-    ptr_el.style.height = '0';
-  }
+  if (ptr_pulling && parseInt(ptr_el.style.height) >= 28) { ptr_el.style.height = '42px'; ptr_icon.textContent = '⟳ Aktualisiere…'; load().finally(() => { ptr_el.style.height = '0'; }); }
+  else { ptr_el.style.height = '0'; }
   ptr_startY = 0; ptr_pulling = false;
 }, { passive: true });
 
-/* ── Auto-Refresh ────────────────────────────────── */
+/* ── Auto-Refresh & Boot ─────────────────────────── */
 setInterval(() => { if (st.key && !st.loading) load(); }, 5 * 60 * 1000);
-
-/* ── Boot ────────────────────────────────────────── */
 if (st.key) load(); else render();
 </script>
 </body>
