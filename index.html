@@ -54,6 +54,9 @@
 
     /* ── CARD BASE ───────────────────────────────────── */
     .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--sh); overflow: hidden; }
+    .card.overflow-visible { overflow: visible; }
+    .card.overflow-visible .card-head { border-radius: var(--r) var(--r) 0 0; }
+    .card.overflow-visible .card-body { border-radius: 0 0 var(--r) var(--r); }
     .card-head { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
     .card-title { font-size: .72rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
     .card-sub { font-size: .7rem; color: var(--text3); margin-top: 2px; }
@@ -296,7 +299,7 @@ function selectCity(i) {
 function renderLocPrompt() {
   const noLoc = !st.ipLoc && !st.useGps;
   return `
-  <div class="card">
+  <div class="card overflow-visible">
     <div class="card-head">
       <div>
         <div class="card-title">${noLoc ? '📍 Standort nicht erkannt' : 'Stadt / Standort'}</div>
