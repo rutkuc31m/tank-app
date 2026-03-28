@@ -118,7 +118,7 @@
 <div id="app"></div>
 <script>
 /* ── Keys ────────────────────────────────────────── */
-const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', favs:'t_favs', hist:'t_hist', gps:'t_gps' };
+const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', favs:'t_favs', gps:'t_gps' };
 const HANNOVER = { lat: 52.3759, lng: 9.7320 };
 const RADII    = [3, 5, 10];
 const FUEL     = 'e10';
@@ -136,27 +136,6 @@ function fmtTime(d) { return d.toLocaleTimeString('de-DE', { hour:'2-digit', min
 function today()  { return new Date().toISOString().slice(0, 10); }
 function dayLabel(str) { const [y,m,d] = str.split('-').map(Number); return DAY_LABELS[new Date(y,m-1,d).getDay()]; }
 
-/* ── Price History ───────────────────────────────── */
-function getHist() { return lsJson(LS.hist, {}); }
-
-function saveHist(stations) {
-  const hist = getHist(), t = today();
-  hist[t] = {};
-  stations.forEach(s => { if (num(s[FUEL])) hist[t][s.id] = s[FUEL]; });
-  const keys = Object.keys(hist).sort();
-  while (keys.length > 7) delete hist[keys.shift()];
-  lsJsonSet(LS.hist, hist);
-}
-
-function getTrend(id, price) {
-  const hist = getHist(), t = today();
-  const days = Object.keys(hist).filter(d => d < t).sort();
-  if (!days.length || !price) return null;
-  const prev = hist[days[days.length-1]]?.[id];
-  if (!prev) return null;
-  const d = price - prev;
-  return Math.abs(d) < 0.002 ? 'eq' : d > 0 ? 'up' : 'down';
-}
 
 /* ── State ───────────────────────────────────────── */
 const cached = lsJson(LS.cache, null);
@@ -165,11 +144,12 @@ let st = {
   radius:   parseInt(lsGet(LS.radius, '10')) || 10,
   favs:     lsJson(LS.favs, []),
   useGps:   lsGet(LS.gps) === '1',
-  gpsPos:   null,
-  stations: cached?.stations || [],
-  updated:  cached?.ts ? new Date(cached.ts) : null,
-  loading:  false,
-  error:    null,
+  gpsPos:       null,
+  stations:     cached?.stations || [],
+  updated:      cached?.ts ? new Date(cached.ts) : null,
+  priceHistory: [],
+  loading:      false,
+  error:        null,
 };
 
 /* ── Sort + Cheapest ─────────────────────────────── */
@@ -219,12 +199,17 @@ async function load() {
   try {
     const pos  = await getPos();
     const url  = `https://creativecommons.tankerkoenig.de/json/list.php?lat=${pos.lat}&lng=${pos.lng}&rad=${st.radius}&sort=dist&type=all&apikey=${st.key}`;
-    const data = await (await fetch(url)).json();
+    const [stRes, prRes] = await Promise.allSettled([
+      fetch(url).then(r => r.json()),
+      fetch('./prices.json?v=' + Date.now()).then(r => r.json()),
+    ]);
+    if (stRes.status === 'rejected') throw new Error(stRes.reason?.message || 'Fetch fehlgeschlagen');
+    const data = stRes.value;
     if (!data.ok) throw new Error(data.message || 'API-Fehler');
     st.stations = data.stations || [];
     st.updated  = new Date();
     lsJsonSet(LS.cache, { stations: st.stations, ts: st.updated.toISOString() });
-    saveHist(st.stations);
+    if (prRes.status === 'fulfilled') st.priceHistory = prRes.value.days || [];
   } catch(e) { st.error = e.message; }
   st.loading = false;
   render();
@@ -232,62 +217,57 @@ async function load() {
 
 /* ── Weekly Chart ────────────────────────────────── */
 function renderWeeklyChart() {
-  const hist = getHist();
-  const t    = today();
-  // all stored days, last 7, sorted
-  const days = Object.keys(hist).sort().slice(-7);
-
-  // compute daily cheapest price
-  const pts = days.map(d => {
-    const prices = Object.values(hist[d]).filter(p => p > 0);
-    return { d, label: dayLabel(d), isToday: d === t, min: prices.length ? Math.min(...prices) : null };
-  }).filter(x => x.min);
-
+  const pts    = st.priceHistory;
+  const t      = today();
   const noData = pts.length < 2;
 
-  // overall trend line
+  // overall trend
   let trendHtml = '';
   if (pts.length >= 2) {
     const first = pts[0], last = pts[pts.length - 1];
-    const diff  = last.min - first.min;
-    const absDiff = Math.abs(diff).toFixed(3).replace('.', ',');
-    if (Math.abs(diff) < 0.002) {
-      trendHtml = `<span class="week-trend eq">→ Unverändert</span>`;
-    } else if (diff > 0) {
-      trendHtml = `<span class="week-trend up">↑ +${absDiff} € seit ${first.label}</span>`;
-    } else {
-      trendHtml = `<span class="week-trend down">↓ −${absDiff} € seit ${first.label}</span>`;
-    }
+    const diff  = last.e10_min - first.e10_min;
+    const abs   = Math.abs(diff).toFixed(3).replace('.', ',');
+    trendHtml = Math.abs(diff) < 0.002
+      ? `<span class="week-trend eq">→ Unverändert</span>`
+      : diff > 0
+        ? `<span class="week-trend up">↑ +${abs} € seit ${dayLabel(first.date)}</span>`
+        : `<span class="week-trend down">↓ −${abs} € seit ${dayLabel(first.date)}</span>`;
   }
 
-  // SVG bars
   let svgContent = '';
   if (!noData) {
-    const W = 460, BAR_H = 80, LABEL_H = 38, H = BAR_H + LABEL_H;
+    const W = 460, CH = 90, LH = 38, H = CH + LH;
     const n    = pts.length;
     const colW = W / n;
-    const barW = Math.min(colW * 0.52, 44);
-    const minP = Math.min(...pts.map(x => x.min));
-    const maxP = Math.max(...pts.map(x => x.min));
-    const range = maxP - minP || 0.001;
+    const barW = Math.min(colW * 0.48, 38);
+
+    // global scale across all min/max values
+    const allVals = pts.flatMap(x => [x.e10_min, x.e10_max]);
+    const gMin = Math.min(...allVals), gMax = Math.max(...allVals);
+    const gRange = gMax - gMin || 0.01;
+
+    // map price → y pixel (higher price = lower y = higher on screen)
+    const toY = p => CH - ((p - gMin) / gRange) * (CH - 8);
 
     const bars = pts.map((x, i) => {
-      const cx    = colW * i + colW / 2;
-      // higher price = taller bar (standard chart)
-      const ratio = (x.min - minP) / range;
-      const bh    = 18 + ratio * (BAR_H - 22);
-      const by    = BAR_H - bh;
-      const isCheap = x.min === minP;
-      const fill  = x.isToday ? '#4a7a93' : isCheap ? '#bae6fd' : '#3f3f46';
-      const stroke = x.isToday ? '#bae6fd' : 'none';
-      const labelCol = x.isToday ? '#fafafa' : isCheap ? '#bae6fd' : '#71717a';
-      const priceStr = x.min.toFixed(3).replace('.', ',');
-      const fw    = x.isToday ? '700' : '400';
+      const cx       = colW * i + colW / 2;
+      const yMax     = toY(x.e10_max);  // higher price → smaller y
+      const yMin     = toY(x.e10_min);
+      const bh       = yMin - yMax;
+      const isToday  = x.date === t;
+      const isCheap  = x.e10_min === Math.min(...pts.map(p => p.e10_min));
+      const fill     = isToday ? '#4a7a93' : isCheap ? '#bae6fd' : '#3f3f46';
+      const stroke   = isToday ? '#bae6fd' : 'none';
+      const lCol     = isToday ? '#fafafa' : isCheap ? '#bae6fd' : '#71717a';
+      const fw       = isToday ? '700' : '400';
+      const minStr   = x.e10_min.toFixed(3).replace('.', ',');
+      const maxStr   = x.e10_max.toFixed(3).replace('.', ',');
 
       return `
-        <rect x="${(cx - barW/2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="5" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
-        <text x="${cx.toFixed(1)}" y="${(BAR_H + 16).toFixed(1)}" text-anchor="middle" font-size="11" fill="${labelCol}" font-weight="${fw}" font-family="system-ui,sans-serif">${x.label}</text>
-        <text x="${cx.toFixed(1)}" y="${(BAR_H + 32).toFixed(1)}" text-anchor="middle" font-size="10" fill="${labelCol}" font-family="system-ui,sans-serif">${priceStr}</text>`;
+        <rect x="${(cx-barW/2).toFixed(1)}" y="${yMax.toFixed(1)}" width="${barW}" height="${Math.max(bh,2).toFixed(1)}" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="1.5" opacity="0.9"/>
+        <text x="${cx.toFixed(1)}" y="${(yMax-4).toFixed(1)}" text-anchor="middle" font-size="9" fill="${lCol}" font-family="system-ui,sans-serif" opacity="0.8">${maxStr}</text>
+        <text x="${cx.toFixed(1)}" y="${(CH+15).toFixed(1)}" text-anchor="middle" font-size="11" fill="${lCol}" font-weight="${fw}" font-family="system-ui,sans-serif">${dayLabel(x.date)}</text>
+        <text x="${cx.toFixed(1)}" y="${(CH+29).toFixed(1)}" text-anchor="middle" font-size="10" fill="${lCol}" font-family="system-ui,sans-serif">${minStr}</text>`;
     }).join('');
 
     svgContent = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible;">${bars}</svg>`;
@@ -300,7 +280,7 @@ function renderWeeklyChart() {
       ${trendHtml}
     </div>
     ${noData
-      ? `<div class="week-nodata">Noch nicht genug Daten — ab morgen sichtbar</div>`
+      ? `<div class="week-nodata">Erste Daten erscheinen morgen automatisch</div>`
       : svgContent}
   </div>`;
 }
@@ -381,16 +361,11 @@ function renderCard(s, minPrice) {
   const p     = num(s[FUEL]);
   const isMin = minPrice !== null && p === minPrice;
   const isFav = st.favs.includes(s.id);
-  const trend = getTrend(s.id, p);
 
   const tags = [
     isMin ? `<span class="tag tag-cheapest">★ Günstigste E10</span>` : '',
     isFav ? `<span class="tag tag-fav">♥ Favorit</span>` : '',
   ].filter(Boolean).join('');
-
-  const trendHtml = trend === 'up'   ? `<span class="trend trend-up" title="Teurer als gestern">↑</span>`
-                  : trend === 'down' ? `<span class="trend trend-down" title="Günstiger als gestern">↓</span>`
-                  : trend === 'eq'   ? `<span class="trend trend-eq" title="Gleich wie gestern">→</span>` : '';
 
   const cls = ['s-card', isMin ? 'cheapest' : '', isFav ? 'fav-card' : ''].filter(Boolean).join(' ');
 
@@ -411,7 +386,6 @@ function renderCard(s, minPrice) {
     ${tags ? `<div class="tags-row">${tags}</div>` : ''}
     <div class="price-row">
       <div class="price-main${isMin ? ' accent' : ''}">${fmt(s[FUEL])}</div>
-      ${trendHtml}
     </div>
   </div>`;
 }
