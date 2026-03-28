@@ -174,8 +174,14 @@ let st = {
 
 /* ── Sort + Cheapest ─────────────────────────────── */
 function sortedStations() {
-  const list = [...st.stations].sort((a, b) => (num(a[FUEL]) || 9999) - (num(b[FUEL]) || 9999));
-  return { favs: list.filter(s => st.favs.includes(s.id)), rest: list.filter(s => !st.favs.includes(s.id)), all: list };
+  // sort by price, then by distance if price is equal
+  const list = [...st.stations].sort((a, b) => {
+    const pa = num(a[FUEL]) || 9999, pb = num(b[FUEL]) || 9999;
+    return pa !== pb ? pa - pb : (a.dist || 0) - (b.dist || 0);
+  });
+  // top 5 only
+  const top5 = list.slice(0, 5);
+  return { favs: top5.filter(s => st.favs.includes(s.id)), rest: top5.filter(s => !st.favs.includes(s.id)), all: top5 };
 }
 function cheapestOf(list) {
   const ps = list.filter(s => s.isOpen).map(s => num(s[FUEL])).filter(Boolean);
