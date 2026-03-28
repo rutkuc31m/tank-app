@@ -111,7 +111,6 @@
 <script>
 const LS_KEY    = 't_key';
 const LS_FUEL   = 't_fuel';
-const LS_SORT   = 't_sort';
 const LS_RADIUS = 't_radius';
 const LS_CACHE  = 't_cache';
 
@@ -130,8 +129,7 @@ try {
 let st = {
   key:      localStorage.getItem(LS_KEY)    || '',
   fuel:     localStorage.getItem(LS_FUEL)   || 'e5',
-  sort:     localStorage.getItem(LS_SORT)   || 'preis',
-  radius:   parseInt(localStorage.getItem(LS_RADIUS)) || 5,
+  radius:   parseInt(localStorage.getItem(LS_RADIUS)) || 10,
   stations: cachedStations,
   loading:  false,
   error:    null,
@@ -156,7 +154,7 @@ function cheapestOf(list, fuel) {
 
 function sorted() {
   let list = [...st.stations];
-  if (st.sort === 'preis' && st.fuel !== 'alle') {
+  if (st.fuel !== 'alle') {
     list.sort((a, b) => (num(a[st.fuel]) || 9999) - (num(b[st.fuel]) || 9999));
   }
   return list;
@@ -230,11 +228,6 @@ function renderMain() {
       ${FUELS.map(f => `<button class="tab${st.fuel===f?' active':''}" data-fuel="${f}">${FUEL_LABEL[f]}</button>`).join('')}
     </div>
     <div class="opts-row">
-      <div class="opt-group">
-        <span class="opt-label">Sortierung:</span>
-        <button class="opt-btn${st.sort==='preis'?' active':''}" data-sort="preis">Preis</button>
-        <button class="opt-btn${st.sort==='distanz'?' active':''}" data-sort="distanz">Entfernung</button>
-      </div>
       <div class="opt-group">
         <span class="opt-label">Umkreis:</span>
         ${RADII.map(r => `<button class="opt-btn${st.radius===r?' active':''}" data-rad="${r}">${r}&thinsp;km</button>`).join('')}
@@ -318,9 +311,6 @@ function attach() {
 
   document.querySelectorAll('[data-fuel]').forEach(el => {
     el.onclick = () => { st.fuel = el.dataset.fuel; save(LS_FUEL, st.fuel); render(); };
-  });
-  document.querySelectorAll('[data-sort]').forEach(el => {
-    el.onclick = () => { st.sort = el.dataset.sort; save(LS_SORT, st.sort); render(); };
   });
   document.querySelectorAll('[data-rad]').forEach(el => {
     el.onclick = () => { st.radius = parseInt(el.dataset.rad); save(LS_RADIUS, st.radius); load(); };
