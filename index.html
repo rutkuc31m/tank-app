@@ -451,6 +451,17 @@ function attach() {
   }
 }
 
+/* ── Close dropdown on outside click ────────────── */
+document.addEventListener('click', e => {
+  const inp = document.getElementById('loc-inp');
+  const res = document.getElementById('loc-results');
+  if (!inp || !res) return;
+  if (!inp.contains(e.target) && !res.contains(e.target)) {
+    st.locSearch.results = [];
+    res.innerHTML = '';
+  }
+});
+
 /* ── Pull-to-Refresh ─────────────────────────────── */
 const ptr_el   = document.getElementById('ptr');
 const ptr_icon = document.getElementById('ptr-icon');
