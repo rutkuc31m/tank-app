@@ -55,16 +55,6 @@
     .list-divider { font-size: 11px; color: var(--text3); padding: 4px 2px; display: flex; align-items: center; gap: 8px; }
     .list-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    /* Weekly chart card */
-    .week-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 14px 12px; }
-    .week-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
-    .week-title { font-size: 13px; font-weight: 600; color: var(--text2); }
-    .week-trend { font-size: 12px; }
-    .week-trend.up   { color: var(--red); }
-    .week-trend.down { color: var(--green); }
-    .week-trend.eq   { color: var(--text3); }
-    .week-nodata { font-size: 12px; color: var(--text3); padding: 16px 0 8px; text-align: center; }
-
     /* Station card */
     .s-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: border-color 0.2s; }
     .s-card:active { opacity: 0.85; }
@@ -122,7 +112,6 @@ const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', favs:'t_favs', gps
 const HANNOVER = { lat: 52.3759, lng: 9.7320 };
 const RADII    = [3, 5, 10];
 const FUEL     = 'e10';
-const DAY_LABELS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
 
 /* ── Helpers ─────────────────────────────────────── */
 function lsGet(k, d='')   { try { return localStorage.getItem(k) ?? d; } catch { return d; } }
@@ -133,9 +122,6 @@ function lsJsonSet(k, v)  { try { localStorage.setItem(k, JSON.stringify(v)); } 
 function num(p)   { return p && p > 0 ? p : null; }
 function fmt(p)   { return num(p) ? p.toFixed(3).replace('.', ',') + '\u202f€' : '–'; }
 function fmtTime(d) { return d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }); }
-function today()  { return new Date().toISOString().slice(0, 10); }
-function dayLabel(str) { const [y,m,d] = str.split('-').map(Number); return DAY_LABELS[new Date(y,m-1,d).getDay()]; }
-
 
 /* ── State ───────────────────────────────────────── */
 const cached = lsJson(LS.cache, null);
@@ -147,7 +133,6 @@ let st = {
   gpsPos:       null,
   stations:     cached?.stations || [],
   updated:      cached?.ts ? new Date(cached.ts) : null,
-  priceHistory: [],
   loading:      false,
   error:        null,
 };
@@ -199,90 +184,14 @@ async function load() {
   try {
     const pos  = await getPos();
     const url  = `https://creativecommons.tankerkoenig.de/json/list.php?lat=${pos.lat}&lng=${pos.lng}&rad=${st.radius}&sort=dist&type=all&apikey=${st.key}`;
-    const [stRes, prRes] = await Promise.allSettled([
-      fetch(url).then(r => r.json()),
-      fetch('./prices.json?v=' + Date.now()).then(r => r.json()),
-    ]);
-    if (stRes.status === 'rejected') throw new Error(stRes.reason?.message || 'Fetch fehlgeschlagen');
-    const data = stRes.value;
+    const data = await fetch(url).then(r => r.json());
     if (!data.ok) throw new Error(data.message || 'API-Fehler');
     st.stations = data.stations || [];
     st.updated  = new Date();
     lsJsonSet(LS.cache, { stations: st.stations, ts: st.updated.toISOString() });
-    if (prRes.status === 'fulfilled') st.priceHistory = prRes.value.days || [];
   } catch(e) { st.error = e.message; }
   st.loading = false;
   render();
-}
-
-/* ── Weekly Chart ────────────────────────────────── */
-function renderWeeklyChart() {
-  const pts    = st.priceHistory;
-  const t      = today();
-  const noData = pts.length < 2;
-
-  // overall trend
-  let trendHtml = '';
-  if (pts.length >= 2) {
-    const first = pts[0], last = pts[pts.length - 1];
-    const diff  = last.e10_min - first.e10_min;
-    const abs   = Math.abs(diff).toFixed(3).replace('.', ',');
-    trendHtml = Math.abs(diff) < 0.002
-      ? `<span class="week-trend eq">→ Unverändert</span>`
-      : diff > 0
-        ? `<span class="week-trend up">↑ +${abs} € seit ${dayLabel(first.date)}</span>`
-        : `<span class="week-trend down">↓ −${abs} € seit ${dayLabel(first.date)}</span>`;
-  }
-
-  let svgContent = '';
-  if (!noData) {
-    const W = 460, CH = 90, LH = 38, H = CH + LH;
-    const n    = pts.length;
-    const colW = W / n;
-    const barW = Math.min(colW * 0.48, 38);
-
-    // global scale across all min/max values
-    const allVals = pts.flatMap(x => [x.e10_min, x.e10_max]);
-    const gMin = Math.min(...allVals), gMax = Math.max(...allVals);
-    const gRange = gMax - gMin || 0.01;
-
-    // map price → y pixel (higher price = lower y = higher on screen)
-    const toY = p => CH - ((p - gMin) / gRange) * (CH - 8);
-
-    const bars = pts.map((x, i) => {
-      const cx       = colW * i + colW / 2;
-      const yMax     = toY(x.e10_max);  // higher price → smaller y
-      const yMin     = toY(x.e10_min);
-      const bh       = yMin - yMax;
-      const isToday  = x.date === t;
-      const isCheap  = x.e10_min === Math.min(...pts.map(p => p.e10_min));
-      const fill     = isToday ? '#4a7a93' : isCheap ? '#bae6fd' : '#3f3f46';
-      const stroke   = isToday ? '#bae6fd' : 'none';
-      const lCol     = isToday ? '#fafafa' : isCheap ? '#bae6fd' : '#71717a';
-      const fw       = isToday ? '700' : '400';
-      const minStr   = x.e10_min.toFixed(3).replace('.', ',');
-      const maxStr   = x.e10_max.toFixed(3).replace('.', ',');
-
-      return `
-        <rect x="${(cx-barW/2).toFixed(1)}" y="${yMax.toFixed(1)}" width="${barW}" height="${Math.max(bh,2).toFixed(1)}" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="1.5" opacity="0.9"/>
-        <text x="${cx.toFixed(1)}" y="${(yMax-4).toFixed(1)}" text-anchor="middle" font-size="9" fill="${lCol}" font-family="system-ui,sans-serif" opacity="0.8">${maxStr}</text>
-        <text x="${cx.toFixed(1)}" y="${(CH+15).toFixed(1)}" text-anchor="middle" font-size="11" fill="${lCol}" font-weight="${fw}" font-family="system-ui,sans-serif">${dayLabel(x.date)}</text>
-        <text x="${cx.toFixed(1)}" y="${(CH+29).toFixed(1)}" text-anchor="middle" font-size="10" fill="${lCol}" font-family="system-ui,sans-serif">${minStr}</text>`;
-    }).join('');
-
-    svgContent = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible;">${bars}</svg>`;
-  }
-
-  return `
-  <div class="week-card">
-    <div class="week-header">
-      <span class="week-title">Wochenentwicklung E10</span>
-      ${trendHtml}
-    </div>
-    ${noData
-      ? `<div class="week-nodata">Erste Daten erscheinen morgen automatisch</div>`
-      : svgContent}
-  </div>`;
 }
 
 /* ── Render ──────────────────────────────────────── */
@@ -352,7 +261,6 @@ function renderMain() {
   </div>
 
   <div class="list">
-    ${renderWeeklyChart()}
     ${cardsHtml}
   </div>`;
 }
