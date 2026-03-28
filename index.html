@@ -248,7 +248,7 @@ function renderCard(s, minPrice) {
   const e10cls  = isMin && p ? ' accent' : p ? '' : ' na';
 
   return `
-  <div class="s-card${isMin ? ' cheapest' : ''}">
+  <div class="s-card${isMin ? ' cheapest' : ''}" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}','_blank')" style="cursor:pointer">
     <div class="s-top">
       <div class="s-info">
         <div class="s-name">${s.name || s.brand || 'Tankstelle'}</div>
