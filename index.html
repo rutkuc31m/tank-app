@@ -262,17 +262,9 @@ function renderCard(s, minPrice) {
     </div>
     ${isMin ? `<div class="cheapest-tag">★ Günstigste E10-Tankstelle</div>` : ''}
     <div class="prices">
-      <div class="p-item">
-        <div class="p-type">E5</div>
-        <div class="p-val${num(s.e5) ? '' : ' na'}">${fmt(s.e5)}</div>
-      </div>
       <div class="p-item sel">
         <div class="p-type">E10</div>
         <div class="p-val${e10cls}">${fmt(s.e10)}</div>
-      </div>
-      <div class="p-item">
-        <div class="p-type">Diesel</div>
-        <div class="p-val${num(s.diesel) ? '' : ' na'}">${fmt(s.diesel)}</div>
       </div>
     </div>
   </div>`;
