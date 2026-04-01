@@ -378,8 +378,8 @@ function renderRechner(minPrice) {
           ${litersNum ? `<div class="rechner-sub">${liters}\u202fL · beim günstigsten</div>` : ''}
         </div>
         <div class="rechner-col">
-          <div class="rechner-val" style="color:var(--text);font-size:1.2rem;">${fullTank ? fullTank + '\u202f€' : '–'}</div>
-          <div class="rechner-label">Volltank (${CAR.tank}\u202fL)</div>
+          <div class="rechner-val" style="color:var(--text);font-size:.85rem;">${fullTank ? fullTank + '\u202f€' : '–'}</div>
+          <div class="rechner-label" style="font-size:.8rem;color:var(--text2);">Volltank (${CAR.tank}\u202fL)</div>
           ${minPrice ? `<div class="rechner-sub">beim günstigsten</div>` : '<div class="rechner-sub">Warte auf Preise…</div>'}
         </div>
       </div>
