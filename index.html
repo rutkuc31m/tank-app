@@ -373,12 +373,12 @@ function renderRechner(minPrice) {
       </div>
       <div class="rechner-result">
         <div class="rechner-col">
-          <div class="rechner-val">${km ? '≈\u202f' + km + '\u202fkm' : '–'}</div>
+          <div class="rechner-val" style="font-size:.85rem;">${km ? '≈\u202f' + km + '\u202fkm' : '–'}</div>
           <div class="rechner-label">Reichweite</div>
           ${litersNum ? `<div class="rechner-sub">${liters}\u202fL · beim günstigsten</div>` : ''}
         </div>
         <div class="rechner-col">
-          <div class="rechner-val" style="color:var(--text);">${fullTank ? fullTank + '\u202f€' : '–'}</div>
+          <div class="rechner-val" style="color:var(--text);font-size:1.2rem;">${fullTank ? fullTank + '\u202f€' : '–'}</div>
           <div class="rechner-label">Volltank (${CAR.tank}\u202fL)</div>
           ${minPrice ? `<div class="rechner-sub">beim günstigsten</div>` : '<div class="rechner-sub">Warte auf Preise…</div>'}
         </div>
