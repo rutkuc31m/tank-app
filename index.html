@@ -361,7 +361,7 @@ function renderRechner(minPrice) {
   const fullTank  = minPrice  ? Math.round(CAR.tank * minPrice * 100) / 100 : null;
   return `
   <div class="card">
-    <div class="card-head" style="border-bottom:none;padding-bottom:6px;"><div class="card-title">Tankkosten</div></div>
+    <div class="card-head" style="border-bottom:none;padding-bottom:6px;"><div class="card-title">Tankkosten</div><div style="font-size:.7rem;color:var(--text3);">Opel Mokka 2025</div></div>
     <div class="card-body" style="padding-top:0;">
       <div class="stepper-row">
         <button class="step-btn" onclick="setEuros(st.euros-5)">−</button>
