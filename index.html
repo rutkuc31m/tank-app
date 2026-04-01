@@ -149,6 +149,7 @@ const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', gps:'t_gps', loc:'
 const FALLBACK = { lat: 52.3759, lng: 9.7320, city: 'Hannover' };
 const RADII    = [3, 5, 10];
 const FUEL     = 'e10';
+const CAR      = { tank: 44, consumption: 7.0 }; // Opel Mokka 2025 Elegant 1.2T
 
 /* ── Helpers ─────────────────────────────────────── */
 function lsGet(k, d='')   { try { return localStorage.getItem(k) ?? d; } catch { return d; } }
@@ -315,8 +316,16 @@ function setEuros(e, skipRender) {
     const res = document.querySelector('.rechner-result');
     if (res) {
       const minPrice = cheapestOf(sortedStations());
-      const liters = minPrice ? (st.euros / minPrice).toFixed(2).replace('.', ',') : '–';
-      res.querySelector('.rechner-cost').textContent = liters + (minPrice ? '\u202fL' : '');
+      const litersNum = minPrice ? st.euros / minPrice : null;
+      const liters = litersNum ? litersNum.toFixed(2).replace('.', ',') : '–';
+      const km = litersNum ? Math.round(litersNum / CAR.consumption * 100) : null;
+      const fullTank = minPrice ? Math.round(CAR.tank * minPrice * 100) / 100 : null;
+      res.querySelector('.rechner-cost').textContent = liters + (litersNum ? '\u202fL' : '');
+      let kmEl = res.querySelector('.rechner-km');
+      if (km) {
+        if (!kmEl) { kmEl = document.createElement('div'); kmEl.className = 'rechner-km'; kmEl.style.cssText = 'margin-top:5px;font-size:.8rem;color:var(--text3);'; res.appendChild(kmEl); }
+        kmEl.innerHTML = `≈ <span style="color:var(--text2);font-weight:600;">${km}\u202fkm</span> Reichweite · Volltank ${fullTank.toFixed(2).replace('.',',')} €`;
+      } else if (kmEl) { kmEl.remove(); }
     }
   } else {
     render();
@@ -343,7 +352,10 @@ function renderStats(stations) {
 }
 
 function renderRechner(minPrice) {
-  const liters = minPrice ? (st.euros / minPrice).toFixed(2).replace('.', ',') : '–';
+  const litersNum = minPrice ? st.euros / minPrice : null;
+  const liters    = litersNum ? litersNum.toFixed(2).replace('.', ',') : '–';
+  const km        = litersNum ? Math.round(litersNum / CAR.consumption * 100) : null;
+  const fullTank  = minPrice  ? Math.round(CAR.tank * minPrice * 100) / 100 : null;
   return `
   <div class="card">
     <div class="card-head" style="border-bottom:none;padding-bottom:6px;"><div class="card-title">Tankkosten</div></div>
@@ -357,8 +369,13 @@ function renderRechner(minPrice) {
         <button class="step-btn" onclick="setEuros(st.euros+5)">+</button>
       </div>
       <div class="rechner-result">
-        <span class="rechner-cost">${liters}${minPrice ? '\u202fL' : ''}</span>
-        <span class="rechner-sub">${minPrice ? 'beim günstigsten' : 'Warte auf Preise…'}</span>
+        <div>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span class="rechner-cost">${liters}${litersNum ? '\u202fL' : ''}</span>
+            <span class="rechner-sub">${minPrice ? 'beim günstigsten' : 'Warte auf Preise…'}</span>
+          </div>
+          ${km ? `<div style="margin-top:5px;font-size:.8rem;color:var(--text3);">≈ <span style="color:var(--text2);font-weight:600;">${km}\u202fkm</span> Reichweite · Volltank ${fullTank.toFixed(2).replace('.',',')} €</div>` : ''}
+        </div>
       </div>
     </div>
   </div>`;
