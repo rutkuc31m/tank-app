@@ -125,6 +125,8 @@
     .rechner-result { display: flex; align-items: baseline; gap: 10px; padding: 10px 14px; background: var(--card2); border-radius: 10px; }
     .rechner-cost { font-size: 1.9rem; font-weight: 800; color: var(--accent); line-height: 1; }
     .rechner-sub { font-size: .75rem; color: var(--text3); }
+    .mode-toggle { padding: 3px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text3); font-size: .72rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .mode-toggle.active { background: var(--card2); border-color: var(--text3); color: var(--text); }
 
     /* ── SETUP ───────────────────────────────────────── */
     .setup { max-width: 400px; margin: 80px auto; padding: 0 24px; text-align: center; }
@@ -175,6 +177,8 @@ let st = {
   updated:      cached?.ts ? new Date(cached.ts) : null,
   prevPrices:   {},
   liters:       parseInt(lsGet('t_liters', '50')) || 50,
+  euros:        parseInt(lsGet('t_euros', '40')) || 40,
+  rechnerMode:  lsGet('t_rmode', 'liter'),
   loading:      false,
   error:        null,
 };
@@ -314,6 +318,16 @@ function setLiters(l) {
   lsSet(LS.liters, st.liters);
   render();
 }
+function setEuros(e) {
+  st.euros = Math.max(5, Math.min(500, e));
+  lsSet('t_euros', st.euros);
+  render();
+}
+function setRechnerMode(m) {
+  st.rechnerMode = m;
+  lsSet('t_rmode', m);
+  render();
+}
 
 function renderStats(stations) {
   const prices = stations.map(s => num(s[FUEL])).filter(Boolean);
@@ -335,24 +349,43 @@ function renderStats(stations) {
 }
 
 function renderRechner(minPrice) {
-  const presets = [20, 30, 40, 50, 60];
-  const cost = minPrice ? (minPrice * st.liters).toFixed(2).replace('.', ',') + ' €' : '–';
+  const isEuro = st.rechnerMode === 'euro';
+  const noPrice = !minPrice;
+  let resultVal, resultSub;
+  if (isEuro) {
+    resultVal = noPrice ? '–' : (st.euros / minPrice).toFixed(2).replace('.', ',') + '\u202fL';
+    resultSub = noPrice ? 'Warte auf Preise…' : 'beim günstigsten';
+  } else {
+    resultVal = noPrice ? '–' : (minPrice * st.liters).toFixed(2).replace('.', ',') + '\u202f€';
+    resultSub = noPrice ? 'Warte auf Preise…' : 'beim günstigsten';
+  }
+  const literPresets = [20, 30, 40, 50, 60];
+  const euroPresets  = [10, 20, 30, 40, 50, 100];
   return `
   <div class="card">
-    <div class="card-head" style="border-bottom:none;padding-bottom:6px;"><div class="card-title">Tankkosten</div></div>
+    <div class="card-head" style="border-bottom:none;padding-bottom:6px;">
+      <div class="card-title">Tankkosten</div>
+      <div style="display:flex;gap:4px;">
+        <button class="mode-toggle${!isEuro?' active':''}" onclick="setRechnerMode('liter')">Liter</button>
+        <button class="mode-toggle${isEuro?' active':''}" onclick="setRechnerMode('euro')">Euro</button>
+      </div>
+    </div>
     <div class="card-body" style="padding-top:0;">
       <div class="preset-row">
-        ${presets.map(l => `<button class="preset-btn${st.liters===l?' active':''}" onclick="setLiters(${l})">${l}</button>`).join('')}
-        <span class="preset-unit">L</span>
+        ${isEuro
+          ? euroPresets.map(e => `<button class="preset-btn${st.euros===e?' active':''}" onclick="setEuros(${e})">${e}</button>`).join('')
+          : literPresets.map(l => `<button class="preset-btn${st.liters===l?' active':''}" onclick="setLiters(${l})">${l}</button>`).join('')
+        }
+        <span class="preset-unit">${isEuro ? '€' : 'L'}</span>
       </div>
       <div class="stepper-row">
-        <button class="step-btn" onclick="setLiters(st.liters-5)">−</button>
-        <span class="step-val">${st.liters}&thinsp;L</span>
-        <button class="step-btn" onclick="setLiters(st.liters+5)">+</button>
+        <button class="step-btn" onclick="${isEuro ? 'setEuros(st.euros-5)' : 'setLiters(st.liters-5)'}">−</button>
+        <span class="step-val">${isEuro ? st.euros+'\u202f€' : st.liters+'\u202fL'}</span>
+        <button class="step-btn" onclick="${isEuro ? 'setEuros(st.euros+5)' : 'setLiters(st.liters+5)'}">+</button>
       </div>
       <div class="rechner-result">
-        <span class="rechner-cost">${cost}</span>
-        <span class="rechner-sub">${minPrice ? 'beim günstigsten' : 'Warte auf Preise…'}</span>
+        <span class="rechner-cost">${resultVal}</span>
+        <span class="rechner-sub">${resultSub}</span>
       </div>
     </div>
   </div>`;
