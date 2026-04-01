@@ -324,7 +324,7 @@ function setEuros(e, skipRender) {
       const fullTank = minPrice ? (CAR.tank * minPrice).toFixed(2).replace('.', ',') : null;
       const cols = res.querySelectorAll('.rechner-col');
       if (cols[0]) {
-        cols[0].querySelector('.rechner-val').textContent = km ? 'km + '\u202fkm' : '–';
+        cols[0].querySelector('.rechner-val').textContent = km ? km + '\u202fkm' : '–';
         const sub0 = cols[0].querySelector('.rechner-sub');
         if (sub0) sub0.textContent = litersNum ? litersNum.toFixed(2).replace('.',',') + '\u202fL' : '';
       }
