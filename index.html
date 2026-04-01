@@ -120,10 +120,12 @@
     .step-inp { width: 90px; text-align: center; font-size: 1.3rem; font-weight: 700; color: var(--text); background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 0; outline: none; -moz-appearance: textfield; }
     .step-inp::-webkit-inner-spin-button, .step-inp::-webkit-outer-spin-button { -webkit-appearance: none; }
     .step-inp:focus { border-color: var(--accent); }
-    .rechner-result { padding: 10px 14px; background: var(--card2); border-radius: 10px; }
-    .rechner-km { font-size: 1.9rem; font-weight: 800; color: var(--accent); line-height: 1; }
-    .rechner-detail { font-size: .78rem; color: var(--text3); margin-top: 4px; }
-    .rechner-detail span { color: var(--text2); }
+    .rechner-result { display: flex; background: var(--card2); border-radius: 10px; overflow: hidden; }
+    .rechner-col { flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; }
+    .rechner-col + .rechner-col { border-left: 1px solid var(--border); }
+    .rechner-val { font-size: 1.5rem; font-weight: 800; color: var(--accent); line-height: 1; }
+    .rechner-label { font-size: .7rem; color: var(--text3); }
+    .rechner-sub { font-size: .72rem; color: var(--text2); }
 
     /* ── SETUP ───────────────────────────────────────── */
     .setup { max-width: 400px; margin: 80px auto; padding: 0 24px; text-align: center; }
@@ -320,10 +322,13 @@ function setEuros(e, skipRender) {
       const litersNum = minPrice ? st.euros / minPrice : null;
       const km = litersNum ? Math.round(litersNum / CAR.consumption * 100) : null;
       const fullTank = minPrice ? (CAR.tank * minPrice).toFixed(2).replace('.', ',') : null;
-      res.querySelector('.rechner-km').textContent = km ? '≈\u202f' + km + '\u202fkm' : '–';
-      res.querySelector('.rechner-detail').innerHTML = litersNum
-        ? `<span>${litersNum.toFixed(2).replace('.',',')}\u202fL</span> · Volltank <span>${fullTank}\u202f€</span>`
-        : 'Warte auf Preise…';
+      const cols = res.querySelectorAll('.rechner-col');
+      if (cols[0]) {
+        cols[0].querySelector('.rechner-val').textContent = km ? '≈\u202f' + km + '\u202fkm' : '–';
+        const sub0 = cols[0].querySelector('.rechner-sub');
+        if (sub0) sub0.textContent = litersNum ? litersNum.toFixed(2).replace('.',',') + '\u202fL' : '';
+      }
+      if (cols[1]) cols[1].querySelector('.rechner-val').textContent = fullTank ? fullTank + '\u202f€' : '–';
     }
   } else {
     render();
@@ -367,10 +372,16 @@ function renderRechner(minPrice) {
         <button class="step-btn" onclick="setEuros(st.euros+5)">+</button>
       </div>
       <div class="rechner-result">
-        <div class="rechner-km">${km ? '≈\u202f' + km + '\u202fkm' : '–'}</div>
-        <div class="rechner-detail">${litersNum
-          ? `<span>${liters}\u202fL</span> · Volltank <span>${fullTank}\u202f€</span>`
-          : 'Warte auf Preise…'}</div>
+        <div class="rechner-col">
+          <div class="rechner-val">${km ? '≈\u202f' + km + '\u202fkm' : '–'}</div>
+          <div class="rechner-label">Reichweite</div>
+          ${litersNum ? `<div class="rechner-sub">${liters}\u202fL</div>` : ''}
+        </div>
+        <div class="rechner-col">
+          <div class="rechner-val">${fullTank ? fullTank + '\u202f€' : '–'}</div>
+          <div class="rechner-label">Volltank (${CAR.tank}\u202fL)</div>
+          ${minPrice ? `<div class="rechner-sub">beim günstigsten</div>` : '<div class="rechner-sub">Warte auf Preise…</div>'}
+        </div>
       </div>
     </div>
   </div>`;
