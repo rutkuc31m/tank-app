@@ -105,18 +105,6 @@
     .loc-result:active { background: var(--card); }
     .loc-result-sub { font-size: .7rem; color: var(--text3); margin-top: 1px; }
 
-    /* ── TANK TIP ────────────────────────────────────── */
-    .tip-card { border-radius: var(--r); padding: 11px 14px; display: flex; align-items: center; gap: 12px; border: 1px solid; box-shadow: var(--sh); }
-    .tip-good { background: var(--accent-subtle); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
-    .tip-ok   { background: color-mix(in srgb, #fbbf24 8%, var(--card)); border-color: color-mix(in srgb, #fbbf24 30%, transparent); }
-    .tip-warn { background: var(--card); border-color: var(--border); }
-    .tip-icon { font-size: 1.1rem; flex-shrink: 0; }
-    .tip-body { display: flex; flex-direction: column; gap: 2px; }
-    .tip-text { font-size: .84rem; font-weight: 600; }
-    .tip-good .tip-text { color: var(--accent); }
-    .tip-ok   .tip-text { color: #fbbf24; }
-    .tip-warn .tip-text { color: var(--text2); }
-    .tip-sub  { font-size: .7rem; color: var(--text3); }
 
     /* ── SETUP ───────────────────────────────────────── */
     .setup { max-width: 400px; margin: 80px auto; padding: 0 24px; text-align: center; }
@@ -231,21 +219,6 @@ async function load() {
   render();
 }
 
-/* ── Tank Tip ────────────────────────────────────── */
-function tankTip() {
-  const h = new Date().getHours();
-  const d = new Date().getDay();
-  if (d === 0 || d === 6)    return { cls:'tip-warn', icon:'⚠️', text:'Wochenende — tendenziell teurer',  sub:'Werktags 18–20 Uhr meist günstiger' };
-  if (h >= 18 && h < 21)     return { cls:'tip-good', icon:'✅', text:'Jetzt tanken!',                    sub:'Mo–Mi abends meist am günstigsten' };
-  if (h >= 6  && h < 8)      return { cls:'tip-good', icon:'✅', text:'Gute Zeit zum Tanken',             sub:'Früh morgens oft günstig' };
-  if (h >= 10 && h < 13)     return { cls:'tip-warn', icon:'⚠️', text:'Preise steigen oft gerade',        sub:'Wenn möglich, bis 18 Uhr warten' };
-  if (h >= 16 && h < 18)     return { cls:'tip-warn', icon:'⚠️', text:'Preisanstieg möglich',             sub:'In 1–2 Std. wieder günstiger' };
-  return                              { cls:'tip-ok',  icon:'🕐', text:'Geht so',                         sub:'Abends 18–20 Uhr meist günstiger' };
-}
-function renderTankTip() {
-  const t = tankTip();
-  return `<div class="tip-card ${t.cls}"><div class="tip-icon">${t.icon}</div><div class="tip-body"><div class="tip-text">${t.text}</div><div class="tip-sub">${t.sub}</div></div></div>`;
-}
 
 /* ── City Search ─────────────────────────────────── */
 async function searchCities(q) {
@@ -355,8 +328,7 @@ function renderMain() {
   </div>
   <div class="page">
     ${renderLocPrompt()}
-    ${renderTankTip()}
-    ${cardsHtml}
+${cardsHtml}
   </div>`;
 }
 
