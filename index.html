@@ -2,157 +2,599 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tank App</title>
-  <meta name="theme-color" content="#0a0a0b">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Tank · E10</title>
+  <meta name="theme-color" content="#0c0e0d">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="icon" href="./icon-192.png" type="image/png">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Tank App">
+  <meta name="apple-mobile-web-app-title" content="Tank">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
     /* ── TOKENS ──────────────────────────────────────── */
     :root {
-      --bg: #0a0a0b; --card: #18181b; --card2: #27272a; --border: #3f3f46;
-      --text: #fafafa; --text2: #a1a1aa; --text3: #71717a;
-      --accent: #bae6fd; --accent-subtle: #0c2840;
-      --r: 13px; --sh: 0 1px 3px rgba(0,0,0,.5);
-      --green: #4ade80; --red: #f87171; --yellow: #fbbf24;
+      --bg:        #0c0e0d;
+      --bg2:       #0f1213;
+      --surface:   #15181a;
+      --surface2:  #1c2022;
+      --line:      #2a2f33;
+      --line2:     #363c40;
+      --ink:       #e8ebe4;
+      --ink2:      #a8afa6;
+      --mute:      #6b7280;
+      --mute2:     #4a5056;
+      --signal:    #d4ff3a;   /* phosphor lime */
+      --signal-d:  #9bc41a;
+      --warn:      #ff7a3d;   /* amber */
+      --cool:      #5ec8ff;
+      --r:  14px;
+      --r2: 10px;
+      --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: 'Instrument Sans', system-ui, -apple-system, sans-serif;
     }
+
     *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    button, input { font-family: inherit; }
+
+    html, body { background: var(--bg); }
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      min-height: 100vh;
+      min-height: 100dvh;
+      font-feature-settings: "ss01", "cv11";
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(212,255,58,.05), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, rgba(94,200,255,.035), transparent 60%),
+        var(--bg);
+    }
+    body::before {
+      content:'';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: .05;
+      mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%);
+    }
+
+    button, input { font-family: inherit; color: inherit; }
+    button { border: none; background: none; cursor: pointer; }
+
+    .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+    .caps { text-transform: uppercase; letter-spacing: .14em; font-weight: 600; }
 
     /* ── PTR ─────────────────────────────────────────── */
-    #ptr { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; justify-content: center; align-items: center; height: 0; overflow: hidden; transition: height .15s; background: var(--card2); border-bottom: 1px solid var(--border); font-size: .85rem; color: var(--text2); }
+    #ptr {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; justify-content: center; align-items: center;
+      height: 0; overflow: hidden; transition: height .15s;
+      background: var(--surface); border-bottom: 1px solid var(--line);
+      font-family: var(--mono); font-size: .7rem; color: var(--signal);
+      letter-spacing: .18em; text-transform: uppercase;
+    }
+    #ptr svg { margin-right: 8px; }
 
     /* ── TOPBAR ──────────────────────────────────────── */
-    .topbar { background: var(--card); position: sticky; top: 0; z-index: 99; border-bottom: 1px solid var(--border); }
-    .topbar-inner { max-width: 640px; margin: 0 auto; height: 52px; padding: 0 16px; display: flex; align-items: center; gap: 8px; }
-    .app-title { font-size: 1rem; font-weight: 700; flex: 1; letter-spacing: -.2px; }
-    .icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--card2); color: var(--text2); cursor: pointer; font-size: .95rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
-    .icon-btn:hover { background: var(--border); color: var(--text); }
-    .icon-btn.spinning { animation: spin .8s linear infinite; }
-    .icon-btn.active { background: var(--accent-subtle); border-color: var(--accent); color: var(--accent); }
+    .topbar {
+      background: rgba(12,14,13,.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 99;
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar-inner {
+      max-width: 680px; margin: 0 auto; height: 52px;
+      padding: 0 18px; display: flex; align-items: center; gap: 10px;
+    }
+    .brand { display: flex; align-items: center; gap: 9px; flex: 1; }
+    .brand-mark {
+      width: 22px; height: 22px; border-radius: 6px;
+      background: var(--signal);
+      display: grid; place-items: center;
+      color: #0a0c00; font-family: var(--mono); font-weight: 700; font-size: .72rem;
+      box-shadow: 0 0 18px -4px var(--signal);
+    }
+    .brand-text {
+      font-family: var(--mono); font-size: .78rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .22em; color: var(--ink);
+    }
+    .brand-text em { color: var(--signal); font-style: normal; font-weight: 700; }
+
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 8px;
+      border: 1px solid var(--line); background: var(--surface);
+      color: var(--ink2); display: flex; align-items: center; justify-content: center;
+      transition: all .15s; flex-shrink: 0;
+    }
+    .icon-btn:hover, .icon-btn:active { background: var(--surface2); color: var(--ink); border-color: var(--line2); }
+    .icon-btn.spinning svg { animation: spin .9s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── CTRLBAR ─────────────────────────────────────── */
-    .ctrlbar { background: var(--card); border-bottom: 1px solid var(--border); }
-    .ctrlbar-inner { max-width: 640px; margin: 0 auto; padding: 8px 16px; display: flex; align-items: center; gap: 8px; }
-    .opt-label { font-size: .74rem; color: var(--text3); white-space: nowrap; }
-    .opt-btn { padding: 4px 10px; border-radius: 7px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: .78rem; cursor: pointer; transition: all .15s; }
-    .opt-btn.active { background: var(--card2); color: var(--text); border-color: var(--text3); }
-    .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
-    @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
-    .status-text { font-size: .74rem; color: var(--accent); }
-    .status-err  { font-size: .74rem; color: var(--red); }
+    .ctrlbar { border-bottom: 1px solid var(--line); background: var(--bg2); }
+    .ctrlbar-inner {
+      max-width: 680px; margin: 0 auto;
+      padding: 10px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .city-pill {
+      display: flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: .72rem;
+      text-transform: uppercase; letter-spacing: .12em;
+      color: var(--signal);
+    }
+    .city-pill svg { width: 12px; height: 12px; }
+    .sep { width: 1px; height: 14px; background: var(--line2); }
+
+    .seg {
+      display: inline-flex; border: 1px solid var(--line); border-radius: 8px;
+      overflow: hidden; background: var(--surface);
+    }
+    .seg-btn {
+      padding: 5px 10px; font-family: var(--mono); font-size: .72rem;
+      color: var(--mute); background: transparent;
+      border-right: 1px solid var(--line); transition: all .15s;
+    }
+    .seg-btn:last-child { border-right: none; }
+    .seg-btn.active { background: var(--signal); color: #0a0c00; font-weight: 700; }
+
+    .status {
+      margin-left: auto; display: flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: .68rem; color: var(--ink2);
+      text-transform: uppercase; letter-spacing: .1em;
+    }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--signal); box-shadow: 0 0 8px var(--signal);
+      animation: pulse 1.3s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: .35; transform: scale(.85); } 50% { opacity: 1; transform: scale(1); } }
+    .status.err { color: var(--warn); }
+    .status.err .status-dot { background: var(--warn); box-shadow: 0 0 8px var(--warn); animation: none; }
 
     /* ── PAGE ────────────────────────────────────────── */
-    .page { max-width: 640px; margin: 0 auto; padding: 12px 14px 80px; display: flex; flex-direction: column; gap: 10px; }
+    .page {
+      position: relative; z-index: 1;
+      max-width: 680px; margin: 0 auto;
+      padding: 16px 14px 100px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+
+    /* ── SECTION LABELS ──────────────────────────────── */
+    .section-label {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--mono); font-size: .68rem;
+      color: var(--mute); text-transform: uppercase; letter-spacing: .22em;
+      padding: 0 4px;
+    }
+    .section-label::before {
+      content: ''; width: 10px; height: 1px; background: var(--line2);
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--line);
+    }
+
+    /* ── HERO: CHEAPEST TOTEM ────────────────────────── */
+    .hero {
+      position: relative;
+      border: 1px solid var(--signal-d);
+      border-radius: var(--r);
+      background:
+        radial-gradient(600px 200px at 50% -20%, rgba(212,255,58,.18), transparent 70%),
+        linear-gradient(180deg, #181c10 0%, #13160f 100%);
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(212,255,58,.08),
+        0 0 60px -20px rgba(212,255,58,.5),
+        inset 0 1px 0 rgba(255,255,255,.04);
+      animation: heroBreath 5s ease-in-out infinite;
+    }
+    @keyframes heroBreath {
+      0%,100% { box-shadow: 0 0 0 1px rgba(212,255,58,.08), 0 0 60px -20px rgba(212,255,58,.5), inset 0 1px 0 rgba(255,255,255,.04); }
+      50%     { box-shadow: 0 0 0 1px rgba(212,255,58,.14), 0 0 80px -15px rgba(212,255,58,.7), inset 0 1px 0 rgba(255,255,255,.06); }
+    }
+    .hero-notch {
+      position: absolute; top: 0; right: 0;
+      width: 28px; height: 28px;
+      background: var(--signal);
+      clip-path: polygon(100% 0, 100% 100%, 0 0);
+    }
+    .hero-head {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px 0;
+    }
+    .hero-tag {
+      font-family: var(--mono); font-size: .66rem; font-weight: 700;
+      color: var(--signal); text-transform: uppercase; letter-spacing: .22em;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .hero-tag::before {
+      content: ''; width: 6px; height: 6px; background: var(--signal);
+      box-shadow: 0 0 10px var(--signal);
+      animation: pulse 1.3s ease-in-out infinite;
+    }
+    .hero-body { padding: 4px 16px 16px; }
+    .hero-price {
+      font-family: var(--mono); font-weight: 700;
+      line-height: .95; color: var(--signal);
+      font-size: clamp(3.2rem, 13vw, 4.6rem);
+      letter-spacing: -0.04em;
+      display: flex; align-items: baseline; gap: 4px;
+      text-shadow: 0 0 40px rgba(212,255,58,.35);
+    }
+    .hero-price .sup {
+      font-size: .38em; align-self: flex-start;
+      margin-top: .18em;
+      color: var(--signal-d);
+    }
+    .hero-price .eur {
+      font-size: .32em; color: var(--ink2);
+      margin-left: 4px; font-weight: 500;
+    }
+    .hero-meta {
+      margin-top: 10px; display: flex; flex-wrap: wrap; gap: 12px 18px;
+      font-family: var(--mono); font-size: .78rem; color: var(--ink);
+    }
+    .hero-meta .dim { color: var(--mute); }
+    .hero-name { font-weight: 600; }
+    .hero-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      border-top: 1px dashed var(--line2);
+      font-family: var(--mono); font-size: .7rem;
+      color: var(--mute); text-transform: uppercase; letter-spacing: .14em;
+    }
+    .hero-foot a {
+      color: var(--signal); text-decoration: none;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+
+    /* ── STRIP ───────────────────────────────────────── */
+    .strip-wrap { margin: 0 -14px; padding: 0 14px; }
+    .strip {
+      display: flex; gap: 8px; overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      padding-bottom: 4px;
+    }
+    .strip::-webkit-scrollbar { display: none; }
+    .strip-card {
+      flex: 0 0 140px;
+      scroll-snap-align: start;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r2);
+      padding: 10px 11px;
+      display: flex; flex-direction: column; gap: 6px;
+      cursor: pointer; transition: all .15s;
+    }
+    .strip-card:active { transform: scale(.97); border-color: var(--line2); }
+    .strip-price {
+      font-family: var(--mono); font-weight: 700;
+      font-size: 1.15rem; color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .strip-price .sup { font-size: .55em; color: var(--mute); }
+    .strip-name {
+      font-size: .78rem; color: var(--ink);
+      font-weight: 500; line-height: 1.15;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .strip-dist {
+      font-family: var(--mono); font-size: .68rem;
+      color: var(--mute); text-transform: uppercase; letter-spacing: .1em;
+      display: flex; justify-content: space-between;
+    }
+    .strip-dist .closed { color: var(--warn); }
 
     /* ── CARD BASE ───────────────────────────────────── */
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--sh); overflow: hidden; }
-    .card.overflow-visible { overflow: visible; }
-    .card.overflow-visible .card-head { border-radius: var(--r) var(--r) 0 0; }
-    .card.overflow-visible .card-body { border-radius: 0 0 var(--r) var(--r); }
-    .card-head { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .card-head.no-border { border-bottom: none; }
-    .card-title { font-size: .72rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
-    .card-sub { font-size: .7rem; color: var(--text3); margin-top: 2px; }
-    .card-body { padding: 10px 14px; }
-
-    /* ── LIST DIVIDER ────────────────────────────────── */
-    .list-divider { font-size: .7rem; color: var(--text3); padding: 2px 0; display: flex; align-items: center; gap: 8px; }
-    .list-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-    /* ── STATION CARD ────────────────────────────────── */
-    .s-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--sh); cursor: pointer; overflow: hidden; transition: border-color .15s; }
-    .s-card:active { opacity: .85; }
-    .s-card.cheapest { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
-    .s-head {padding: 11px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 1px solid var(--border); }
-    .s-info { flex: 1; min-width: 0; }
-    .s-name { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .s-brand { font-size: .7rem; color: var(--text3); margin-top: 1px; }
-    .s-addr  { font-size: .7rem; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .s-right { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
-    .dist-badge { font-size: .78rem; font-weight: 500; color: var(--accent); }
-    .open-pill { font-size: .67rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
-    .open-pill.open   { background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--text2); }
-    .open-pill.closed { background: color-mix(in srgb, var(--border) 40%, var(--card)); color: var(--text3); }
-
-    .s-body { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
-    .tags-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-    .tag { font-size: .67rem; font-weight: 600; }
-    .tag-cheapest { color: var(--accent); }
-    .price-row { display: flex; align-items: center; gap: 8px; }
-    .price-main { font-size: 1.75rem; font-weight: 800; line-height: 1; color: var(--text); }
-    .price-main.accent { color: var(--accent); }
-    .trend { font-size: 1rem; font-weight: 700; }
-    .trend-up   { color: var(--red); }
-    .trend-down { color: var(--green); }
-
-    /* ── LOCATION CARD ───────────────────────────────── */
-    .loc-inp { width: 100%; padding: 8px 11px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: .88rem; outline: none; transition: border-color .2s; }
-    .loc-inp:focus { border-color: var(--accent); }
-    .loc-gps { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-size: .95rem; cursor: pointer; transition: all .15s; padding: 8px 12px; flex-shrink: 0; }
-    .loc-gps.active { background: var(--accent-subtle); border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent); }
-    .loc-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,.6); }
-    .loc-results:empty { display: none; }
-    .loc-result { padding: 9px 12px; font-size: .84rem; cursor: pointer; border-bottom: 1px solid var(--border); color: var(--text); }
-    .loc-result:last-child { border-bottom: none; }
-    .loc-result:active { background: var(--card); }
-    .loc-result-sub { font-size: .7rem; color: var(--text3); margin-top: 1px; }
-
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+    }
+    .card-head {
+      padding: 12px 16px 4px;
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .card-title {
+      font-family: var(--mono); font-size: .68rem;
+      color: var(--ink2); text-transform: uppercase; letter-spacing: .22em;
+      font-weight: 600;
+    }
+    .card-sub { font-family: var(--mono); font-size: .68rem; color: var(--signal); text-transform: uppercase; letter-spacing: .14em; }
+    .card-body { padding: 8px 16px 16px; }
 
     /* ── STATS ───────────────────────────────────────── */
-    .stats-row { display: flex; }
-    .stat-item { flex: 1; text-align: center; padding: 6px 0; }
-    .stat-item + .stat-item { border-left: 1px solid var(--border); }
-    .stat-val { font-size: 1rem; font-weight: 700; }
-    .stat-val.accent { color: var(--accent); }
-    .stat-label { font-size: .68rem; color: var(--text3); margin-top: 2px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+    .stat-item { padding: 4px 0; text-align: left; position: relative; }
+    .stat-item + .stat-item { padding-left: 14px; }
+    .stat-item + .stat-item::before {
+      content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+      width: 1px; background: var(--line);
+    }
+    .stat-val {
+      font-family: var(--mono); font-size: 1.15rem; font-weight: 700;
+      color: var(--ink); letter-spacing: -0.02em;
+    }
+    .stat-val.accent { color: var(--signal); }
+    .stat-label {
+      font-family: var(--mono); font-size: .62rem;
+      color: var(--mute); text-transform: uppercase; letter-spacing: .16em;
+      margin-top: 4px;
+    }
 
     /* ── RECHNER ─────────────────────────────────────── */
-    .stepper-row { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 12px; }
-    .step-btn { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border); background: var(--card2); color: var(--text); font-size: 1.4rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .step-inp { width: 90px; text-align: center; font-size: 1.3rem; font-weight: 700; color: var(--text); background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 0; outline: none; -moz-appearance: textfield; }
+    .stepper-row {
+      display: flex; align-items: stretch; gap: 10px;
+      margin-bottom: 14px;
+    }
+    .step-btn {
+      width: 48px; border-radius: 10px;
+      border: 1px solid var(--line); background: var(--surface2);
+      color: var(--ink); font-size: 1.3rem; font-weight: 500;
+      transition: all .12s;
+    }
+    .step-btn:active { background: var(--signal); color: #0a0c00; border-color: var(--signal); transform: scale(.96); }
+    .step-display {
+      flex: 1; position: relative;
+      border: 1px solid var(--line); border-radius: 10px;
+      background: linear-gradient(180deg, #0f1210, #15181a);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .step-display::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--signal), transparent);
+      opacity: .3;
+    }
+    .step-inp {
+      width: 100%; text-align: center;
+      font-family: var(--mono); font-size: 1.7rem; font-weight: 700;
+      color: var(--signal); background: transparent; border: none; outline: none;
+      -moz-appearance: textfield;
+      letter-spacing: -0.02em;
+      text-shadow: 0 0 20px rgba(212,255,58,.4);
+      padding: 8px 0;
+    }
     .step-inp::-webkit-inner-spin-button, .step-inp::-webkit-outer-spin-button { -webkit-appearance: none; }
-    .step-inp:focus { border-color: var(--accent); }
-    .rechner-result { display: flex; gap: 0; border-top: 1px solid var(--border); margin: 0 -14px -10px; }
-    .rechner-col { flex: 1; padding: 8px 14px; display: flex; flex-direction: column; gap: 2px; }
-    .rechner-col + .rechner-col { border-left: 1px solid var(--border); }
-    .rechner-val { font-size: 1rem; font-weight: 700; color: var(--accent); line-height: 1; }
-    .rechner-label { font-size: .67rem; color: var(--text3); }
-    .rechner-sub { font-size: .67rem; color: var(--text2); }
+    .step-unit {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      font-family: var(--mono); font-size: .85rem; color: var(--mute);
+      pointer-events: none;
+    }
+    .rechner-result {
+      display: grid; grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--line);
+      margin: 0 -16px -16px;
+    }
+    .rechner-col { padding: 12px 16px; display: flex; flex-direction: column; gap: 3px; }
+    .rechner-col + .rechner-col { border-left: 1px solid var(--line); }
+    .rechner-val {
+      font-family: var(--mono); font-size: 1.3rem; font-weight: 700;
+      color: var(--signal); line-height: 1; letter-spacing: -0.02em;
+    }
+    .rechner-val.secondary { color: var(--ink); font-size: 1.05rem; }
+    .rechner-label {
+      font-family: var(--mono); font-size: .62rem;
+      color: var(--mute); text-transform: uppercase; letter-spacing: .18em;
+      margin-top: 2px;
+    }
+    .rechner-sub { font-family: var(--mono); font-size: .68rem; color: var(--ink2); margin-top: 1px; }
+
+    /* ── LOCATION ────────────────────────────────────── */
+    .loc-row { display: flex; gap: 8px; position: relative; }
+    .loc-inp {
+      flex: 1; padding: 10px 12px;
+      background: var(--bg2); border: 1px solid var(--line); border-radius: 10px;
+      color: var(--ink); font-size: .92rem; outline: none;
+      transition: border-color .15s;
+    }
+    .loc-inp::placeholder { color: var(--mute); }
+    .loc-inp:focus { border-color: var(--signal); box-shadow: 0 0 0 3px rgba(212,255,58,.08); }
+    .loc-gps {
+      padding: 0 12px; border: 1px solid var(--line); border-radius: 10px;
+      background: var(--bg2); color: var(--ink2);
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
+    }
+    .loc-gps.active {
+      background: var(--signal); border-color: var(--signal); color: #0a0c00;
+      box-shadow: 0 0 18px -4px var(--signal);
+    }
+    .loc-gps.active svg { animation: pulse-gps 2s ease-in-out infinite; }
+    @keyframes pulse-gps { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+    .loc-results {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--surface2); border: 1px solid var(--line2); border-radius: 10px;
+      overflow: hidden; z-index: 100;
+      box-shadow: 0 12px 32px rgba(0,0,0,.6);
+    }
+    .loc-results:empty { display: none; }
+    .loc-result {
+      padding: 10px 14px; font-size: .88rem; cursor: pointer;
+      border-bottom: 1px solid var(--line); color: var(--ink);
+    }
+    .loc-result:last-child { border-bottom: none; }
+    .loc-result:hover, .loc-result:active { background: var(--surface); color: var(--signal); }
+    .loc-result-sub { font-family: var(--mono); font-size: .68rem; color: var(--mute); margin-top: 2px; }
+
+    /* ── STATION LIST ────────────────────────────────── */
+    .list-toggle {
+      width: 100%; padding: 12px;
+      font-family: var(--mono); font-size: .72rem;
+      color: var(--ink2); text-transform: uppercase; letter-spacing: .2em;
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all .15s;
+    }
+    .list-toggle:hover { color: var(--signal); border-color: var(--line2); }
+
+    .s-list { display: flex; flex-direction: column; gap: 8px; }
+    .s-card {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r2);
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 4px 1fr auto;
+      overflow: hidden;
+      transition: border-color .15s, transform .08s;
+    }
+    .s-card:active { transform: scale(.995); }
+    .s-rail {
+      background: var(--mute2);
+    }
+    .s-card.rank-0 .s-rail { background: var(--signal); }
+    .s-card.rank-1 .s-rail { background: color-mix(in srgb, var(--signal) 65%, var(--mute2)); }
+    .s-card.rank-2 .s-rail { background: color-mix(in srgb, var(--signal) 35%, var(--mute2)); }
+
+    .s-main { padding: 11px 14px; min-width: 0; }
+    .s-name {
+      font-size: .92rem; font-weight: 600; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .s-meta {
+      margin-top: 3px; display: flex; align-items: center; gap: 8px;
+      font-family: var(--mono); font-size: .68rem; color: var(--mute);
+      text-transform: uppercase; letter-spacing: .08em;
+    }
+    .s-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--mute2); }
+    .s-addr { color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+    .s-right {
+      padding: 11px 14px 11px 10px;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+      border-left: 1px solid var(--line);
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,.12));
+    }
+    .s-price {
+      font-family: var(--mono); font-weight: 700;
+      font-size: 1.25rem; color: var(--ink);
+      letter-spacing: -0.02em; line-height: 1;
+      display: flex; align-items: baseline;
+    }
+    .s-price .sup { font-size: .55em; color: var(--mute); margin-left: 1px; }
+    .s-card.rank-0 .s-price { color: var(--signal); text-shadow: 0 0 20px rgba(212,255,58,.3); }
+    .s-price.closed { color: var(--mute2); text-decoration: line-through; text-decoration-thickness: 1px; }
+
+    .s-trend {
+      font-family: var(--mono); font-size: .66rem;
+      display: flex; align-items: center; gap: 3px;
+      text-transform: uppercase; letter-spacing: .08em;
+    }
+    .trend-up   { color: var(--warn); }
+    .trend-down { color: var(--signal); }
+
+    .s-pill {
+      font-family: var(--mono); font-size: .58rem; font-weight: 700;
+      padding: 2px 6px; border-radius: 3px;
+      text-transform: uppercase; letter-spacing: .14em;
+    }
+    .s-pill.open { background: rgba(212,255,58,.1); color: var(--signal); }
+    .s-pill.closed { background: rgba(255,122,61,.12); color: var(--warn); }
 
     /* ── SETUP ───────────────────────────────────────── */
-    .setup { max-width: 400px; margin: 80px auto; padding: 0 24px; text-align: center; }
-    .setup-icon { font-size: 2.8rem; margin-bottom: 16px; }
-    .setup h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
-    .setup p { color: var(--text2); font-size: .88rem; line-height: 1.6; margin-bottom: 24px; }
-    .key-inp { width: 100%; padding: 11px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: .84rem; font-family: monospace; outline: none; transition: border-color .2s; }
-    .key-inp:focus { border-color: var(--accent); }
-    .key-btn { margin-top: 10px; width: 100%; padding: 11px; background: var(--accent-subtle); border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: .94rem; font-weight: 600; cursor: pointer; }
+    .setup {
+      max-width: 420px; margin: 80px auto; padding: 0 24px;
+      position: relative; z-index: 1;
+    }
+    .setup-mark {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: var(--signal); color: #0a0c00;
+      display: grid; place-items: center;
+      font-family: var(--mono); font-weight: 700; font-size: 1.4rem;
+      margin-bottom: 20px;
+      box-shadow: 0 0 40px -10px var(--signal);
+    }
+    .setup h2 {
+      font-family: var(--mono); font-size: 1.5rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 6px;
+    }
+    .setup h2 em { color: var(--signal); font-style: normal; }
+    .setup p {
+      color: var(--ink2); font-size: .94rem; line-height: 1.55; margin-bottom: 24px;
+    }
+    .setup-label {
+      font-family: var(--mono); font-size: .66rem; color: var(--mute);
+      text-transform: uppercase; letter-spacing: .22em; margin-bottom: 8px;
+      display: block;
+    }
+    .key-inp {
+      width: 100%; padding: 13px 14px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+      color: var(--ink); font-family: var(--mono); font-size: .86rem;
+      outline: none; transition: border-color .15s;
+    }
+    .key-inp:focus { border-color: var(--signal); box-shadow: 0 0 0 3px rgba(212,255,58,.08); }
+    .key-btn {
+      margin-top: 12px; width: 100%; padding: 14px;
+      background: var(--signal); border-radius: 10px;
+      color: #0a0c00; font-family: var(--mono); font-size: .82rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: .18em;
+      transition: all .15s;
+    }
+    .key-btn:active { transform: scale(.98); background: var(--signal-d); }
 
     /* ── SKEL / EMPTY ────────────────────────────────── */
-    .skel { background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--r); height: 110px; }
+    .skel {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--r2); height: 68px;
+    }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    .empty { text-align: center; padding: 50px 20px; color: var(--text2); font-size: .9rem; }
-    .empty-icon { font-size: 2rem; margin-bottom: 12px; }
+    .empty {
+      text-align: center; padding: 60px 20px;
+      color: var(--mute);
+      font-family: var(--mono); font-size: .82rem;
+      text-transform: uppercase; letter-spacing: .18em;
+    }
+
+    /* ── STAGGERED ENTRANCE ──────────────────────────── */
+    .page > * { animation: fadeUp .5s cubic-bezier(.2,.8,.2,1) both; }
+    .page > *:nth-child(1) { animation-delay: .02s; }
+    .page > *:nth-child(2) { animation-delay: .08s; }
+    .page > *:nth-child(3) { animation-delay: .14s; }
+    .page > *:nth-child(4) { animation-delay: .20s; }
+    .page > *:nth-child(5) { animation-delay: .26s; }
+    .page > *:nth-child(6) { animation-delay: .32s; }
+    .page > *:nth-child(n+7) { animation-delay: .38s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
-<div id="ptr"><span id="ptr-icon">↓ Ziehen</span></div>
+<div id="ptr">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.22-8.56"/><polyline points="21 4 21 10 15 10"/></svg>
+  <span id="ptr-text">Ziehen</span>
+</div>
 <div id="app"></div>
+
 <script>
 /* ── Keys ────────────────────────────────────────── */
-const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', gps:'t_gps', loc:'t_loc', liters:'t_liters' };
+const LS = { key:'t_key', radius:'t_radius', cache:'t_cache', gps:'t_gps', loc:'t_loc', liters:'t_liters', listOpen:'t_listopen' };
 const FALLBACK = { lat: 52.3759, lng: 9.7320, city: 'Hannover' };
 const RADII    = [3, 5, 10];
 const FUEL     = 'e10';
-const CAR      = { tank: 44, consumption: 7.0 }; // Opel Mokka 2025 Elegant 1.2T
+const CAR      = { tank: 44, consumption: 7.0 };
 
 /* ── Helpers ─────────────────────────────────────── */
 function lsGet(k, d='')   { try { return localStorage.getItem(k) ?? d; } catch { return d; } }
@@ -161,8 +603,21 @@ function lsJson(k, d)     { try { return JSON.parse(localStorage.getItem(k)) ?? 
 function lsJsonSet(k, v)  { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 
 function num(p)   { return p && p > 0 ? p : null; }
-function fmt(p)   { return num(p) ? p.toFixed(3).replace('.', ',') + '\u202f€' : '–'; }
 function fmtTime(d) { return d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }); }
+function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+/* Split price into main (X.YZ) + superscript 3rd decimal */
+function splitPrice(p) {
+  if (!num(p)) return null;
+  const s = p.toFixed(3);
+  return { main: s.slice(0, -1).replace('.', ','), sup: s.slice(-1) };
+}
+function priceHtml(p, opts={}) {
+  const sp = splitPrice(p);
+  if (!sp) return '<span class="mono" style="color:var(--mute)">—</span>';
+  const eur = opts.euro ? '<span class="eur">€</span>' : '';
+  return `${sp.main}<span class="sup">${sp.sup}</span>${eur}`;
+}
 
 /* ── State ───────────────────────────────────────── */
 const cached = lsJson(LS.cache, null);
@@ -179,6 +634,7 @@ let st = {
   euros:        parseInt(lsGet('t_euros', '20')) || 20,
   loading:      false,
   error:        null,
+  listOpen:     lsGet(LS.listOpen) === '1',
 };
 
 /* ── Sort + Cheapest ─────────────────────────────── */
@@ -186,7 +642,7 @@ function sortedStations() {
   return [...st.stations].sort((a, b) => {
     const pa = num(a[FUEL]) || 9999, pb = num(b[FUEL]) || 9999;
     return pa !== pb ? pa - pb : (a.dist || 0) - (b.dist || 0);
-  }).slice(0, 10);
+  }).slice(0, 12);
 }
 function cheapestOf(list) {
   const ps = list.filter(s => s.isOpen).map(s => num(s[FUEL])).filter(Boolean);
@@ -242,7 +698,6 @@ async function load() {
   render();
 }
 
-
 /* ── City Search ─────────────────────────────────── */
 async function searchCities(q) {
   if (q.length < 2) { st.locSearch.results = []; renderLocResults(); return; }
@@ -264,8 +719,8 @@ function renderLocResults() {
   if (!el) return;
   el.innerHTML = st.locSearch.results.map((c, i) => `
     <div class="loc-result" onclick="selectCity(${i})">
-      <div>${c.name}</div>
-      <div class="loc-result-sub">${[c.admin1, c.country].filter(Boolean).join(', ')}</div>
+      <div>${escapeHtml(c.name)}</div>
+      <div class="loc-result-sub">${escapeHtml([c.admin1, c.country].filter(Boolean).join(' · '))}</div>
     </div>`).join('');
 }
 function selectCity(i) {
@@ -276,23 +731,18 @@ function selectCity(i) {
   st.locSearch = { query: '', results: [], timer: null };
   load();
 }
-function renderLocPrompt() {
-  return `
-  <div class="card overflow-visible">
-    <div class="card-head" style="border-bottom:none;">
-      <div class="card-title">Stadt / Standort</div>
-    </div>
-    <div class="card-body" style="padding-top:0;">
-      <div style="position:relative;">
-        <div style="display:flex;gap:8px;">
-          <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${st.locSearch.query}" style="flex:1;">
-          <button class="loc-gps${st.useGps ? ' active' : ''}" onclick="toggleGps()">📍</button>
-        </div>
-        <div id="loc-results" class="loc-results"></div>
-      </div>
-    </div>
-  </div>`;
-}
+
+/* ── ICONS ───────────────────────────────────────── */
+const ICON = {
+  pin:  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>',
+  cross:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>',
+  refresh:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
+  gear:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  arrow:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+  chevDown:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+  up:'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>',
+  down:'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>',
+};
 
 /* ── Render ──────────────────────────────────────── */
 function render() {
@@ -303,11 +753,12 @@ function render() {
 function renderSetup() {
   return `
   <div class="setup">
-    <div class="setup-icon">⛽</div>
-    <h2>Tank App</h2>
-    <p>Gib deinen Tankerkönig API-Key ein um E10-Preise in deiner Nähe zu sehen.</p>
+    <div class="setup-mark">E10</div>
+    <h2>Tank<em>·</em>App</h2>
+    <p>Live-Spritpreise aus deiner Umgebung. Hol dir einen kostenlosen Tankerkönig API-Key und leg los.</p>
+    <span class="setup-label">API · Key</span>
     <input class="key-inp" id="kinp" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
-    <button class="key-btn" id="ksave">Speichern &amp; starten</button>
+    <button class="key-btn" id="ksave">Start &rarr;</button>
   </div>`;
 }
 
@@ -315,7 +766,6 @@ function setEuros(e, skipRender) {
   st.euros = Math.max(1, Math.min(500, Math.round(e) || 1));
   lsSet('t_euros', st.euros);
   if (skipRender) {
-    // only update result display, not the input itself
     const res = document.querySelector('.rechner-result');
     if (res) {
       const minPrice = cheapestOf(sortedStations());
@@ -324,31 +774,79 @@ function setEuros(e, skipRender) {
       const fullTank = minPrice ? (CAR.tank * minPrice).toFixed(2).replace('.', ',') : null;
       const cols = res.querySelectorAll('.rechner-col');
       if (cols[0]) {
-        cols[0].querySelector('.rechner-val').textContent = km ? '≈\u202f' + km + '\u202fkm' : '–';
+        cols[0].querySelector('.rechner-val').textContent = km ? '≈\u202f' + km + '\u202fkm' : '—';
         const sub0 = cols[0].querySelector('.rechner-sub');
-        if (sub0) sub0.textContent = litersNum ? litersNum.toFixed(2).replace('.',',') + '\u202fL' : '';
+        if (sub0) sub0.textContent = litersNum ? litersNum.toFixed(2).replace('.',',') + '\u202fL · E10' : '';
       }
-      if (cols[1]) cols[1].querySelector('.rechner-val').textContent = fullTank ? fullTank + '\u202f€' : '–';
+      if (cols[1]) cols[1].querySelector('.rechner-val').textContent = fullTank ? fullTank + '\u202f€' : '—';
     }
   } else {
     render();
   }
 }
 
+function renderHero(top, minPrice) {
+  if (!top || !minPrice) return '';
+  return `
+  <div class="hero" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${top.lat},${top.lng}','_blank')">
+    <div class="hero-notch"></div>
+    <div class="hero-head">
+      <span class="hero-tag">Bestpreis · E10</span>
+    </div>
+    <div class="hero-body">
+      <div class="hero-price mono">${priceHtml(top[FUEL])}<span class="eur">€</span></div>
+      <div class="hero-meta">
+        <span class="hero-name">${escapeHtml(top.name || top.brand || 'Tankstelle')}</span>
+        <span class="dim">${top.dist ? top.dist.toFixed(1).replace('.',',')+' km' : ''}</span>
+        <span class="dim">${escapeHtml([top.street, top.place].filter(Boolean).join(', '))}</span>
+      </div>
+    </div>
+    <div class="hero-foot">
+      <span>Navigieren</span>
+      <a>Route öffnen ${ICON.arrow}</a>
+    </div>
+  </div>`;
+}
+
+function renderStrip(list) {
+  if (list.length < 2) return '';
+  const others = list.slice(1, 6);
+  if (!others.length) return '';
+  return `
+    <div class="section-label">Nächste ${others.length}</div>
+    <div class="strip-wrap">
+      <div class="strip">
+        ${others.map(s => {
+          const p = num(s[FUEL]);
+          const sp = splitPrice(p);
+          return `<div class="strip-card" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}','_blank')">
+            <div class="strip-price">${sp ? sp.main+'<span class="sup">'+sp.sup+'</span>' : '—'}</div>
+            <div class="strip-name">${escapeHtml(s.name || s.brand || 'Tankstelle')}</div>
+            <div class="strip-dist"><span>${s.dist ? s.dist.toFixed(1).replace('.',',')+' km' : ''}</span><span class="${s.isOpen?'':'closed'}">${s.isOpen?'Offen':'Zu'}</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
 function renderStats(stations) {
   const prices = stations.map(s => num(s[FUEL])).filter(Boolean);
   if (prices.length < 2) return '';
   const minP = Math.min(...prices);
+  const maxP = Math.max(...prices);
   const avgP = prices.reduce((a, b) => a + b, 0) / prices.length;
-  const saving = ((avgP - minP) * 100).toFixed(1).replace('.', ',');
+  const spread = ((maxP - minP) * 100).toFixed(1).replace('.', ',');
   return `
   <div class="card">
-    <div class="card-head" style="border-bottom:none;padding-bottom:6px;"><div class="card-title">Preise in der Umgebung</div></div>
-    <div class="card-body" style="padding-top:0;">
+    <div class="card-head">
+      <div class="card-title">Umgebung</div>
+      <div class="card-sub">${prices.length} Stationen</div>
+    </div>
+    <div class="card-body">
       <div class="stats-row">
-        <div class="stat-item"><div class="stat-val accent">${minP.toFixed(3).replace('.',',')} €</div><div class="stat-label">Günstigste</div></div>
-        <div class="stat-item"><div class="stat-val">${avgP.toFixed(3).replace('.',',')} €</div><div class="stat-label">Durchschnitt Umgebung</div></div>
-        <div class="stat-item"><div class="stat-val">${saving} ct</div><div class="stat-label">unter Durchschnitt</div></div>
+        <div class="stat-item"><div class="stat-val accent mono">${minP.toFixed(3).replace('.',',')}</div><div class="stat-label">Min €/L</div></div>
+        <div class="stat-item"><div class="stat-val mono">${avgP.toFixed(3).replace('.',',')}</div><div class="stat-label">Durchschnitt</div></div>
+        <div class="stat-item"><div class="stat-val mono">${spread}</div><div class="stat-label">Δ Cent</div></div>
       </div>
     </div>
   </div>`;
@@ -356,33 +854,104 @@ function renderStats(stations) {
 
 function renderRechner(minPrice) {
   const litersNum = minPrice ? st.euros / minPrice : null;
-  const liters    = litersNum ? litersNum.toFixed(2).replace('.', ',') : '–';
+  const liters    = litersNum ? litersNum.toFixed(2).replace('.', ',') : '—';
   const km        = litersNum ? Math.round(litersNum / CAR.consumption * 100) : null;
-  const fullTank  = minPrice  ? Math.round(CAR.tank * minPrice * 100) / 100 : null;
+  const fullTank  = minPrice  ? (Math.round(CAR.tank * minPrice * 100) / 100).toFixed(2).replace('.',',') : null;
   return `
   <div class="card">
-    <div class="card-head" style="border-bottom:none;padding-bottom:6px;"><div class="card-title">Tankkosten</div><div style="font-size:.7rem;color:var(--accent);">Opel Mokka 2025</div></div>
-    <div class="card-body" style="padding-top:0;">
+    <div class="card-head">
+      <div class="card-title">Rechner</div>
+      <div class="card-sub">Opel Mokka · ${CAR.consumption.toString().replace('.',',')}L/100</div>
+    </div>
+    <div class="card-body">
       <div class="stepper-row">
         <button class="step-btn" onclick="setEuros(st.euros-5)">−</button>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <input class="step-inp" id="euros-inp" type="number" min="1" max="500" value="${st.euros}" oninput="setEuros(+this.value||1,true)">
-          <span style="font-size:.9rem;color:var(--text3);font-weight:600;">€</span>
+        <div class="step-display">
+          <input class="step-inp mono" id="euros-inp" type="number" inputmode="numeric" min="1" max="500" value="${st.euros}" oninput="setEuros(+this.value||1,true)">
+          <span class="step-unit">€</span>
         </div>
         <button class="step-btn" onclick="setEuros(st.euros+5)">+</button>
       </div>
       <div class="rechner-result">
         <div class="rechner-col">
-          <div class="rechner-val">${km ? '≈\u202f' + km + '\u202fkm' : '–'}</div>
+          <div class="rechner-val mono">${km ? km + '\u202fkm' : '—'}</div>
           <div class="rechner-label">Reichweite</div>
-          ${litersNum ? `<div class="rechner-sub">${liters}\u202fL · beim günstigsten</div>` : ''}
+          <div class="rechner-sub">${litersNum ? liters+'\u202fL · E10' : 'Preis lädt…'}</div>
         </div>
         <div class="rechner-col">
-          <div class="rechner-val" style="color:var(--text);font-size:.85rem;">${fullTank ? fullTank + '\u202f€' : '–'}</div>
-          <div class="rechner-label" style="font-size:.8rem;color:var(--text2);">Volltank (${CAR.tank}\u202fL)</div>
-          ${minPrice ? `<div class="rechner-sub">beim günstigsten</div>` : '<div class="rechner-sub">Warte auf Preise…</div>'}
+          <div class="rechner-val secondary mono">${fullTank ? fullTank+'\u202f€' : '—'}</div>
+          <div class="rechner-label">Volltank · ${CAR.tank}L</div>
+          <div class="rechner-sub">beim Bestpreis</div>
         </div>
       </div>
+    </div>
+  </div>`;
+}
+
+function renderLocPrompt() {
+  return `
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Standort</div>
+    </div>
+    <div class="card-body">
+      <div class="loc-row">
+        <input id="loc-inp" class="loc-inp" type="search" placeholder="Stadt suchen…" autocomplete="off" value="${escapeHtml(st.locSearch.query)}">
+        <button class="loc-gps${st.useGps ? ' active' : ''}" onclick="toggleGps()" title="GPS">${ICON.cross}</button>
+        <div id="loc-results" class="loc-results"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderStationList(list, minPrice) {
+  if (!list.length) return '';
+  return `
+    <div class="section-label">Alle Stationen</div>
+    ${st.listOpen ? `
+      <div class="s-list">${list.map((s, i) => renderStationCard(s, minPrice, i)).join('')}</div>
+    ` : `
+      <button class="list-toggle" onclick="st.listOpen=true;lsSet('t_listopen','1');render();">
+        ${list.length} Stationen zeigen ${ICON.chevDown}
+      </button>
+    `}
+  `;
+}
+
+function renderStationCard(s, minPrice, rank) {
+  const p = num(s[FUEL]);
+  const sp = splitPrice(p);
+  const rankCls = rank <= 2 ? ` rank-${rank}` : '';
+
+  let trendHtml = '';
+  const prev = st.prevPrices[s.id];
+  if (prev && p && Math.abs(p - prev) >= 0.001) {
+    const delta = (p - prev);
+    const deltaFmt = (delta > 0 ? '+' : '−') + Math.abs(delta * 100).toFixed(1).replace('.', ',');
+    const dir = delta < 0 ? 'trend-down' : 'trend-up';
+    const icon = delta < 0 ? ICON.down : ICON.up;
+    trendHtml = `<div class="s-trend ${dir}">${icon}<span>${deltaFmt}</span></div>`;
+  }
+
+  const priceCls = s.isOpen ? '' : 'closed';
+  const priceMarkup = sp
+    ? `<div class="s-price ${priceCls}">${sp.main}<span class="sup">${sp.sup}</span></div>`
+    : `<div class="s-price ${priceCls}">—</div>`;
+
+  return `
+  <div class="s-card${rankCls}" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}','_blank')">
+    <div class="s-rail"></div>
+    <div class="s-main">
+      <div class="s-name">${escapeHtml(s.name || s.brand || 'Tankstelle')}</div>
+      <div class="s-meta">
+        <span class="mono">${s.dist ? s.dist.toFixed(1).replace('.',',')+' km' : ''}</span>
+        <span class="dot"></span>
+        <span class="s-addr">${escapeHtml([s.street, s.place].filter(Boolean).join(', '))}</span>
+      </div>
+    </div>
+    <div class="s-right">
+      ${priceMarkup}
+      ${trendHtml || `<span class="s-pill ${s.isOpen?'open':'closed'}">${s.isOpen?'Offen':'Zu'}</span>`}
     </div>
   </div>`;
 }
@@ -391,79 +960,52 @@ function renderMain() {
   const all = sortedStations();
   const minPrice = cheapestOf(all);
   const hasCache = st.stations.length > 0;
-  const city = st.useGps && st.gpsPos ? 'GPS' : (st.ipLoc?.city || FALLBACK.city);
-
-  let cardsHtml;
-  if (st.loading && !hasCache) {
-    cardsHtml = Array(5).fill(0).map(() => `<div class="skel"></div>`).join('');
-  } else if (!all.length) {
-    cardsHtml = `<div class="empty"><div class="empty-icon">🔍</div>Keine Stationen gefunden</div>`;
-  } else {
-    cardsHtml = all.map(s => renderCard(s, minPrice)).join('');
-  }
+  const city = st.useGps && st.gpsPos ? 'GPS · Live' : (st.ipLoc?.city || FALLBACK.city);
+  const top = all.find(s => s.isOpen && num(s[FUEL]) === minPrice) || all[0];
 
   const statusHtml = st.error
-    ? `<span class="status-err">Fehler: ${st.error}</span>`
+    ? `<span class="status err"><span class="status-dot"></span>Fehler</span>`
     : st.updated
-      ? `${st.loading ? '<span class="status-dot"></span>' : ''}<span class="status-text">${st.loading ? 'Aktualisiere…' : 'Stand: ' + fmtTime(st.updated)}</span>`
-      : st.loading ? `<span class="status-dot"></span><span class="status-text">Lade…</span>` : '';
+      ? `<span class="status">${st.loading ? '<span class="status-dot"></span>' : ''}${st.loading ? 'Sync…' : fmtTime(st.updated)}</span>`
+      : st.loading ? `<span class="status"><span class="status-dot"></span>Lade…</span>` : '';
+
+  let heroBlock;
+  if (st.loading && !hasCache) {
+    heroBlock = `<div class="skel" style="height:200px"></div>`;
+  } else if (!top) {
+    heroBlock = `<div class="empty">Keine Stationen gefunden</div>`;
+  } else {
+    heroBlock = renderHero(top, minPrice);
+  }
 
   return `
   <div class="topbar">
     <div class="topbar-inner">
-      <div class="app-title">⛽ Tank App</div>
-      <button class="icon-btn" id="sbtn" title="API-Key">⚙</button>
-      <button class="icon-btn${st.loading ? ' spinning' : ''}" id="rbtn" title="Aktualisieren">↻</button>
+      <div class="brand">
+        <div class="brand-mark">⌬</div>
+        <div class="brand-text">Tank<em>·</em>App</div>
+      </div>
+      <button class="icon-btn" id="sbtn" title="API-Key">${ICON.gear}</button>
+      <button class="icon-btn${st.loading ? ' spinning' : ''}" id="rbtn" title="Aktualisieren">${ICON.refresh}</button>
     </div>
   </div>
   <div class="ctrlbar">
     <div class="ctrlbar-inner">
-      <span style="font-size:.82rem;font-weight:600;color:var(--accent);white-space:nowrap;">📍 ${city}</span>
-      <span style="color:var(--border);font-size:.7rem;">|</span>
-      ${RADII.map(r => `<button class="opt-btn${st.radius===r?' active':''}" data-rad="${r}">${r}&thinsp;km</button>`).join('')}
-      <div style="flex:1"></div>
-      <div style="display:flex;align-items:center;gap:5px;">${statusHtml}</div>
+      <span class="city-pill">${ICON.pin}${escapeHtml(city)}</span>
+      <span class="sep"></span>
+      <div class="seg">
+        ${RADII.map(r => `<button class="seg-btn${st.radius===r?' active':''}" data-rad="${r}">${r}km</button>`).join('')}
+      </div>
+      ${statusHtml}
     </div>
   </div>
   <div class="page">
-    ${renderLocPrompt()}
-    ${all.length ? renderStats(all) : ''}
+    ${heroBlock}
+    ${all.length > 1 ? renderStrip(all) : ''}
     ${renderRechner(minPrice)}
-${cardsHtml}
-  </div>`;
-}
-
-function renderCard(s, minPrice) {
-  const p     = num(s[FUEL]);
-  const isMin = minPrice !== null && p === minPrice;
-  const cls   = 's-card' + (isMin ? ' cheapest' : '');
-  const trendArrow = (() => {
-    const prev = st.prevPrices[s.id];
-    if (!prev || !p || Math.abs(p - prev) < 0.001) return '';
-    const prevFmt = prev.toFixed(3).replace('.', ',');
-    return p < prev ? `<span class="trend trend-down">↓ <span style="font-size:.75rem;font-weight:400;">(${prevFmt})</span></span>` : `<span class="trend trend-up">↑ <span style="font-size:.75rem;font-weight:400;">(${prevFmt})</span></span>`;
-  })();
-
-  return `
-  <div class="${cls}" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}','_blank')">
-    <div class="s-head">
-      <div class="s-info">
-        <div class="s-name">${s.name || s.brand || 'Tankstelle'}</div>
-        ${s.brand ? `<div class="s-brand">${s.brand}</div>` : ''}
-        <div class="s-addr">${[s.street, s.place].filter(Boolean).join(', ')}</div>
-      </div>
-      <div class="s-right">
-        <span class="dist-badge">${s.dist ? s.dist.toFixed(1)+'\u202fkm' : ''}</span>
-        <span class="open-pill ${s.isOpen?'open':'closed'}">${s.isOpen ? 'Offen' : 'Zu'}</span>
-      </div>
-    </div>
-    <div class="s-body">
-      ${isMin ? `<div class="tags-row"><span class="tag tag-cheapest">★ Günstigste E10</span></div>` : ''}
-      <div class="price-row">
-        <div class="price-main${isMin ? ' accent' : ''}">${fmt(s[FUEL])}</div>
-        ${trendArrow}
-      </div>
-    </div>
+    ${all.length ? renderStats(all) : ''}
+    ${renderLocPrompt()}
+    ${renderStationList(all, minPrice)}
   </div>`;
 }
 
@@ -508,16 +1050,16 @@ document.addEventListener('click', e => {
 
 /* ── Pull-to-Refresh ─────────────────────────────── */
 const ptr_el   = document.getElementById('ptr');
-const ptr_icon = document.getElementById('ptr-icon');
+const ptr_txt  = document.getElementById('ptr-text');
 let ptr_startY = 0, ptr_pulling = false;
 document.addEventListener('touchstart', e => { ptr_startY = window.scrollY < 5 ? e.touches[0].clientY : 0; }, { passive: true });
 document.addEventListener('touchmove', e => {
   if (!ptr_startY || st.loading) return;
   const dy = e.touches[0].clientY - ptr_startY;
-  if (dy > 4) { ptr_pulling = true; const h = Math.min(dy * 0.75, 52); ptr_el.style.height = h + 'px'; ptr_icon.textContent = h >= 28 ? '↺ Loslassen' : '↓ Ziehen'; }
+  if (dy > 4) { ptr_pulling = true; const h = Math.min(dy * 0.75, 56); ptr_el.style.height = h + 'px'; ptr_txt.textContent = h >= 30 ? 'Loslassen' : 'Ziehen'; }
 }, { passive: true });
 document.addEventListener('touchend', () => {
-  if (ptr_pulling && parseInt(ptr_el.style.height) >= 28) { ptr_el.style.height = '42px'; ptr_icon.textContent = '⟳ Aktualisiere…'; load().finally(() => { ptr_el.style.height = '0'; }); }
+  if (ptr_pulling && parseInt(ptr_el.style.height) >= 30) { ptr_el.style.height = '46px'; ptr_txt.textContent = 'Sync…'; load().finally(() => { ptr_el.style.height = '0'; }); }
   else { ptr_el.style.height = '0'; }
   ptr_startY = 0; ptr_pulling = false;
 }, { passive: true });
