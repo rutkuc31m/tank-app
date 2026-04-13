@@ -291,9 +291,11 @@
     }
     .strip-dist {
       font-family: var(--mono); font-size: .68rem;
-      color: var(--mute); text-transform: uppercase; letter-spacing: .1em;
-      display: flex; justify-content: space-between;
+      text-transform: uppercase; letter-spacing: .1em;
+      display: flex; justify-content: space-between; gap: 6px;
     }
+    .strip-dist .km { color: var(--cool); }
+    .strip-dist .open { color: var(--signal); }
     .strip-dist .closed { color: var(--warn); }
 
     /* ── CARD BASE ───────────────────────────────────── */
@@ -822,7 +824,7 @@ function renderStrip(list) {
           return `<div class="strip-card" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}','_blank')">
             <div class="strip-price">${sp ? sp.main+'<span class="sup">'+sp.sup+'</span>' : '—'}</div>
             <div class="strip-name">${escapeHtml(s.name || s.brand || 'Tankstelle')}</div>
-            <div class="strip-dist"><span>${s.dist ? s.dist.toFixed(1).replace('.',',')+' km' : ''}</span><span class="${s.isOpen?'':'closed'}">${s.isOpen?'Offen':'Zu'}</span></div>
+            <div class="strip-dist"><span class="km">${s.dist ? s.dist.toFixed(1).replace('.',',')+' km' : ''}</span><span class="${s.isOpen?'open':'closed'}">${s.isOpen?'Offen':'Zu'}</span></div>
           </div>`;
         }).join('')}
       </div>
